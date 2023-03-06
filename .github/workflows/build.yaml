@@ -1,0 +1,37 @@
+name: "build"
+on:
+  push:
+    paths-ignore:
+      - '**/*.md'
+  pull_request:
+    paths-ignore:
+      - '**/*.md'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: chmod -R 777 *
+        run: chmod -R 777 *
+
+      - name: BuildPlugin
+        run: ./gradlew buildPlugin
+
+      - name: Upload
+        uses: actions/upload-artifact@v3
+        with:
+          name: build
+          path: build/mirai/*
+
+      - name: Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v1
+        with:
+          files: build/mirai/*
+          generate_release_notes: true
