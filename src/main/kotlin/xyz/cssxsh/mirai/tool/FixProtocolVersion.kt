@@ -19,7 +19,7 @@ public object FixProtocolVersion : KotlinPlugin(
     }
 ) {
 
-    private fun fix() {
+    private fun update() {
         MiraiProtocolInternal.protocols[BotConfiguration.MiraiProtocol.ANDROID_PHONE] = MiraiProtocolInternal(
             "com.tencent.mobileqq",
             537151682,
@@ -48,14 +48,15 @@ public object FixProtocolVersion : KotlinPlugin(
 
     override fun PluginComponentStorage.onLoad() {
         if (SemVersion.parseRangeRequirement("<= 2.14.0").test(MiraiConsole.version)) {
-            fix()
+            logger.warning { "Mirai版本低于预期，将升级协议版本" }
+            update()
         }
     }
 
     override fun onEnable() {
         logger.info {
             buildString {
-                appendLine("当前各版本协议信息: ")
+                appendLine("当前各协议版本日期: ")
                 for ((protocol, info) in MiraiProtocolInternal.protocols) {
                     val version = info.ver
                     val datetime = OffsetDateTime.ofInstant(Instant.ofEpochSecond(info.buildTime), ZoneId.systemDefault())
