@@ -2,7 +2,7 @@
 
 [![Downloads](https://img.shields.io/github/downloads/cssxsh/fix-protocol-version/total)](https://github.com/cssxsh/fix-protocol-version/releases)
 
-欢迎投食 `https://github.com/cssxsh#sponsor`
+欢迎投食 <https://github.com/cssxsh#sponsor>
 
 ## Mirai Console 使用方法
 
