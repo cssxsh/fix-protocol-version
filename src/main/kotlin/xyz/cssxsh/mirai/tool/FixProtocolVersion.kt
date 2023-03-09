@@ -1,25 +1,14 @@
 package xyz.cssxsh.mirai.tool
 
-import net.mamoe.mirai.console.*
-import net.mamoe.mirai.console.extension.*
-import net.mamoe.mirai.console.plugin.jvm.*
-import net.mamoe.mirai.console.util.*
 import net.mamoe.mirai.internal.utils.*
 import net.mamoe.mirai.utils.*
 import java.time.*
 
-@Suppress("INVISIBLE_MEMBER", "INVISIBLE_REFERENCE")
-public object FixProtocolVersion : KotlinPlugin(
-    JvmPluginDescription(
-        id = "xyz.cssxsh.mirai.fix-protocol-version",
-        name = "fix-protocol-version",
-        version = "1.0.0",
-    ) {
-        author("cssxsh")
-    }
-) {
+public object FixProtocolVersion {
 
-    private fun update() {
+    @JvmStatic
+    @Suppress("INVISIBLE_MEMBER", "INVISIBLE_REFERENCE")
+    public fun update() {
         MiraiProtocolInternal.protocols[BotConfiguration.MiraiProtocol.ANDROID_PHONE] = MiraiProtocolInternal(
             "com.tencent.mobileqq",
             537151682,
@@ -46,23 +35,14 @@ public object FixProtocolVersion : KotlinPlugin(
         )
     }
 
-    override fun PluginComponentStorage.onLoad() {
-        if (SemVersion.parseRangeRequirement("<= 2.14.0").test(MiraiConsole.version)) {
-            logger.warning { "Mirai版本低于预期，将升级协议版本" }
-            update()
-        }
-    }
+    @JvmStatic
+    @Suppress("INVISIBLE_MEMBER", "INVISIBLE_REFERENCE")
+    public fun info(): Map<BotConfiguration.MiraiProtocol, String> {
+        return MiraiProtocolInternal.protocols.mapValues { (protocol, info) ->
+            val version = info.ver
+            val datetime = OffsetDateTime.ofInstant(Instant.ofEpochSecond(info.buildTime), ZoneId.systemDefault())
 
-    override fun onEnable() {
-        logger.info {
-            buildString {
-                appendLine("当前各协议版本日期: ")
-                for ((protocol, info) in MiraiProtocolInternal.protocols) {
-                    val version = info.ver
-                    val datetime = OffsetDateTime.ofInstant(Instant.ofEpochSecond(info.buildTime), ZoneId.systemDefault())
-                    appendLine("$protocol $version $datetime")
-                }
-            }
+            "$protocol   $version   $datetime"
         }
     }
 }
