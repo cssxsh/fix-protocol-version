@@ -33,6 +33,18 @@ public object FixProtocolVersion {
             1673599898L,
             19,
         )
+        MiraiProtocolInternal.protocols[BotConfiguration.MiraiProtocol.IPAD] = MiraiProtocolInternal(
+            "com.tencent.minihd.qq",
+            537151363,
+            "8.9.33.614",
+            "6.0.0.2433",
+            150470524,
+            66560,
+            1970400,
+            "AA 39 78 F4 1F D9 6F F9 91 4A 66 9E 18 64 74 C7",
+            1640921786L,
+            12,
+        )
         MiraiProtocolInternal.protocols[BotConfiguration.MiraiProtocol.MACOS] = MiraiProtocolInternal(
             "com.tencent.minihd.qq",
             537128930,
