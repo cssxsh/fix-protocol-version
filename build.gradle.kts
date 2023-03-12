@@ -42,10 +42,6 @@ kotlin {
     explicitApi()
 }
 
-mirai {
-    jvmTarget = JavaVersion.VERSION_11
-}
-
 tasks {
     test {
         useJUnitPlatform()
