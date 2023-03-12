@@ -9,6 +9,8 @@
 下载 `mirai2.jar` 放到 `plugins` ，重启 `Mirai` 即可  
 出现 `Mirai版本低于预期，将升级协议版本` 就表示工作正常，因为这只是临时性修复，之后的Mirai版本会另外再修复  
 使用前请清理掉 `device.json`, 不然仍有可能触发 `code=235`
+此插件目前可以用于解决`ANDROID_PHONE` and `ANDROID_PAD` and `MACOS` 的 `code=235` 问题
+遇到 `code=45` 请切换到 `MACOS` 协议
 
 ## Mirai Core 使用方法
 
