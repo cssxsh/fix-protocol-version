@@ -90,7 +90,7 @@ public object FixProtocolVersion {
             val version = info.ver
             val datetime = OffsetDateTime.ofInstant(Instant.ofEpochSecond(info.buildTime), ZoneId.systemDefault())
 
-            "$protocol   $version   $datetime"
+            "%-13s  %-12s  %s".format(protocol, version, datetime)
         }
     }
 }
