@@ -36,6 +36,19 @@ dependencies {
     //
     implementation(platform("org.slf4j:slf4j-parent:2.0.6"))
     testImplementation("org.slf4j:slf4j-simple")
+
+    // ktor
+    implementation("io.ktor:ktor-client-core-jvm:2.2.4")
+    implementation("io.ktor:ktor-client-okhttp-jvm:2.2.4")
+    // jackson
+    implementation("com.fasterxml.jackson.core:jackson-core:2.14.2")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.14.2")
+
+    // 编译mirai-core使用的jar包时使用，将依赖打包进jar
+    // "shadowLink"("io.ktor:ktor-client-core-jvm")
+    // "shadowLink"("io.ktor:ktor-client-okhttp-jvm")
+    // "shadowLink"("com.fasterxml.jackson.core:jackson-core")
+    // "shadowLink"("com.fasterxml.jackson.module:jackson-module-kotlin")
 }
 
 kotlin {

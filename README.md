@@ -28,6 +28,10 @@ import java.util.Map;
 public class Example {
     // 升级协议版本
     public static void update() {
+        // 在线更新所有包含预置url的协议
+        // 目前支持 ANDROID_PHONE 和 ANDROID_PAD
+        FixProtocolVersion.fetchOnline();
+        // 应用协议
         FixProtocolVersion.update();
     }
     // 获取协议版本信息 你可以用这个来检查update是否正常工作

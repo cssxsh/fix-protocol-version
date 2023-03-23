@@ -1,5 +1,6 @@
 package xyz.cssxsh.mirai.tool
 
+import kotlinx.coroutines.*
 import net.mamoe.mirai.console.*
 import net.mamoe.mirai.console.extension.*
 import net.mamoe.mirai.console.plugin.jvm.*
@@ -18,6 +19,13 @@ public object FixProtocolVersionPlugin : KotlinPlugin(
     override fun PluginComponentStorage.onLoad() {
         if (SemVersion.parseRangeRequirement("<= 2.14.0").test(MiraiConsole.version)) {
             logger.warning { "Mirai版本低于预期，将升级协议版本" }
+            runBlocking {
+                try {
+                    FixProtocolVersion.fetchOnline()
+                } catch (e: Exception) {
+                    logger.warning("在线更新协议时发生错误: ${e.message}; 将使用默认版本。")
+                }
+            }
             FixProtocolVersion.update()
         }
     }
