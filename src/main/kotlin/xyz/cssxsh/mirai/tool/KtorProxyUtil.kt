@@ -23,6 +23,9 @@ public object KtorProxyUtil {
     private fun getSystemProxy(): ProxyConfig? {
         System.setProperty("java.net.useSystemProxies", "true")
         val proxyList = ProxySelector.getDefault().select(URI.create("http://google.com"))
-        return proxyList.firstOrNull()?.let { ProxyConfig(it.type(), it.address()) }
+        return proxyList.firstOrNull()?.let {
+            if (it.type() == Proxy.Type.DIRECT) return null
+            ProxyConfig(it.type(), it.address())
+        }
     }
 }
