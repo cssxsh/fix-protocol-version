@@ -22,7 +22,6 @@ public object FixProtocolVersionPlugin : KotlinPlugin(
         }
     }
 
-    @Suppress("INVISIBLE_MEMBER", "INVISIBLE_REFERENCE")
     override fun onEnable() {
         logger.info {
             buildString {

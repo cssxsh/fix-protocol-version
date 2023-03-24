@@ -30,7 +30,7 @@ public object FixProtocolVersion {
                 mainSigMap = 16724722,
                 sign = "A6 B7 45 BF 24 A2 C2 77 52 77 16 F6 F3 6E B6 8D",
                 buildTime = 1673599898L,
-                ssoVersion = 19,
+                ssoVersion = 19
             ),
             ::last
         )
@@ -46,7 +46,7 @@ public object FixProtocolVersion {
                 mainSigMap = 16724722,
                 sign = "A6 B7 45 BF 24 A2 C2 77 52 77 16 F6 F3 6E B6 8D",
                 buildTime = 1673599898L,
-                ssoVersion = 19,
+                ssoVersion = 19
             ),
             ::last
         )
@@ -62,7 +62,7 @@ public object FixProtocolVersion {
                 mainSigMap = 1970400,
                 sign = "AA 39 78 F4 1F D9 6F F9 91 4A 66 9E 18 64 74 C7",
                 buildTime = 1640921786L,
-                ssoVersion = 12,
+                ssoVersion = 12
             ),
             ::last
         )
@@ -78,7 +78,7 @@ public object FixProtocolVersion {
                 mainSigMap = 1970400,
                 sign = "AA 39 78 F4 1F D9 6F F9 91 4A 66 9E 18 64 74 C7",
                 buildTime = 1595836208L,
-                ssoVersion = 12,
+                ssoVersion = 12
             ),
             ::last
         )
