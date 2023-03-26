@@ -2,6 +2,7 @@
 
 [![Downloads](https://img.shields.io/github/downloads/cssxsh/fix-protocol-version/total)](https://github.com/cssxsh/fix-protocol-version/releases)
 
+此插件仅用于修复 `code=235` 问题  
 使用前请清理掉 `device.json`, 不然仍有可能触发 `code=235`  
 此插件目前可以用于解决 `ANDROID_PHONE`, `ANDROID_PAD`, `IPAD`, `MACOS` 的 `code=235` 问题  
 如果遇到 `code=45`，请切换到 `MACOS` 协议
