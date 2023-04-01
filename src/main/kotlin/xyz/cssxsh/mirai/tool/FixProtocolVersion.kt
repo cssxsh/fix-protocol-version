@@ -78,7 +78,7 @@ public object FixProtocolVersion {
                 mainSigMap = 0x001e_10e0,
                 sign = "AA 39 78 F4 1F D9 6F F9 91 4A 66 9E 18 64 74 C7",
                 buildTime = 1640921786L,
-                ssoVersion = 12
+                ssoVersion = 19
             ),
             ::last
         )
