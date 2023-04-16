@@ -29,7 +29,7 @@ public object FixProtocolVersion {
                 subSigMap = 0x0001_0400,
                 mainSigMap = 0x00ff_32f2,
                 sign = "A6 B7 45 BF 24 A2 C2 77 52 77 16 F6 F3 6E B6 8D",
-                buildTime = 1673599898L,
+                buildTime = 1676531414L,
                 ssoVersion = 19
             ),
             ::last
@@ -45,7 +45,7 @@ public object FixProtocolVersion {
                 subSigMap = 0x0001_0400,
                 mainSigMap = 0x00ff_32f2,
                 sign = "A6 B7 45 BF 24 A2 C2 77 52 77 16 F6 F3 6E B6 8D",
-                buildTime = 1673599898L,
+                buildTime = 1676531414L,
                 ssoVersion = 19
             ),
             ::last
