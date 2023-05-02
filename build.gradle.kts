@@ -22,12 +22,13 @@ mavenCentralPublish {
 
 repositories {
     mavenCentral()
+    maven("https://repo.mirai.mamoe.net/snapshots")
 }
 
 dependencies {
     testImplementation(kotlin("test"))
     //
-    implementation(platform("net.mamoe:mirai-bom:2.14.0"))
+    implementation(platform("net.mamoe:mirai-bom:2.15.0-M1"))
     compileOnly("net.mamoe:mirai-core")
     compileOnly("net.mamoe:mirai-core-utils")
     compileOnly("net.mamoe:mirai-console-compiler-common")

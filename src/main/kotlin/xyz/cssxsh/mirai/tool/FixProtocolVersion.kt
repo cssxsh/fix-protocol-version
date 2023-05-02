@@ -124,7 +124,7 @@ public object FixProtocolVersion {
                     1640921786L,
                     19
                 )
-                impl.id < 537151363 -> MiraiProtocolInternal(
+                impl.id <= 537151363 -> MiraiProtocolInternal(
                     apkId = "com.tencent.minihd.qq",
                     id = 537151363,
                     ver = "8.9.33.614",
