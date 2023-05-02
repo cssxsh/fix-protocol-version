@@ -1,24 +1,23 @@
 package xyz.cssxsh.mirai.tool
 
-import net.mamoe.mirai.console.*
 import net.mamoe.mirai.console.extension.*
 import net.mamoe.mirai.console.plugin.jvm.*
-import net.mamoe.mirai.console.util.*
 import net.mamoe.mirai.utils.*
 
 public object FixProtocolVersionPlugin : KotlinPlugin(
     JvmPluginDescription(
         id = "xyz.cssxsh.mirai.fix-protocol-version",
         name = "fix-protocol-version",
-        version = "1.4.0",
+        version = "1.5.0",
     ) {
         author("cssxsh")
     }
 ) {
     override fun PluginComponentStorage.onLoad() {
-        if (SemVersion.parseRangeRequirement("<= 2.14.0").test(MiraiConsole.version)) {
-            logger.warning { "Mirai版本低于预期，将升级协议版本" }
+        try {
             FixProtocolVersion.update()
+        } catch (cause: Throwable) {
+            logger.error("Mirai 版本升级失败", cause)
         }
     }
 
