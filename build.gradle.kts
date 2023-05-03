@@ -28,7 +28,7 @@ repositories {
 dependencies {
     testImplementation(kotlin("test"))
     //
-    implementation(platform("net.mamoe:mirai-bom:2.15.0-M1"))
+    implementation(platform("net.mamoe:mirai-bom:2.15.0-dev-83"))
     compileOnly("net.mamoe:mirai-core")
     compileOnly("net.mamoe:mirai-core-utils")
     compileOnly("net.mamoe:mirai-console-compiler-common")
@@ -41,6 +41,11 @@ dependencies {
 
 kotlin {
     explicitApi()
+}
+
+mirai {
+    coreVersion = "2.14.0"
+    consoleVersion = "2.14.0"
 }
 
 tasks {
