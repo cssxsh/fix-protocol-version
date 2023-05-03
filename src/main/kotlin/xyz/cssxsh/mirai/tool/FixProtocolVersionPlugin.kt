@@ -14,10 +14,11 @@ public object FixProtocolVersionPlugin : KotlinPlugin(
     }
 ) {
     override fun PluginComponentStorage.onLoad() {
+        logger.info("协议版本检查更新...")
         try {
             FixProtocolVersion.update()
         } catch (cause: Throwable) {
-            logger.error("Mirai 版本升级失败", cause)
+            logger.error("协议版本升级失败", cause)
         }
     }
 
