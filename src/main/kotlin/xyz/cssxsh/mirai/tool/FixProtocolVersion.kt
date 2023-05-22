@@ -56,6 +56,7 @@ public object FixProtocolVersion {
         } as MiraiProtocolInternal
     }
 
+    @PublishedApi
     internal class MiraiProtocolInternalBuilder(impl: MiraiProtocolInternal) {
         var apkId: String = impl.field("apkId", "")
         var id: Long = impl.field("id", 0)
@@ -90,7 +91,8 @@ public object FixProtocolVersion {
                 impl.id < 537153294 -> impl.apply {
                     apkId = "com.tencent.mobileqq"
                     id = 537153294
-                    ver = "8.9.35.10440"
+                    ver = "8.9.35"
+                    buildVer = "8.9.35.10440"
                     sdkVer = "6.0.0.2535"
                     miscBitMap = 0x08F7_FF7C
                     subSigMap = 0x0001_0400
@@ -98,6 +100,7 @@ public object FixProtocolVersion {
                     sign = "A6 B7 45 BF 24 A2 C2 77 52 77 16 F6 F3 6E B6 8D"
                     buildTime = 1676531414L
                     ssoVersion = 19
+                    appKey = "0S200MNJT807V3GE"
                     supportsQRLogin = false
                 }
                 else -> impl
@@ -121,7 +124,8 @@ public object FixProtocolVersion {
                 impl.id < 537152242 -> impl.apply {
                     apkId = "com.tencent.mobileqq"
                     id = 537152242
-                    ver = "8.9.35.10440"
+                    ver = "8.9.35"
+                    buildVer = "8.9.35.10440"
                     sdkVer = "6.0.0.2535"
                     miscBitMap = 0x08F7_FF7C
                     subSigMap = 0x0001_0400
@@ -129,6 +133,7 @@ public object FixProtocolVersion {
                     sign = "A6 B7 45 BF 24 A2 C2 77 52 77 16 F6 F3 6E B6 8D"
                     buildTime = 1676531414L
                     ssoVersion = 19
+                    appKey = "0S200MNJT807V3GE"
                     supportsQRLogin = false
                 }
                 else -> impl
@@ -154,6 +159,7 @@ public object FixProtocolVersion {
                     apkId = "com.tencent.qqlite"
                     id = 537065138
                     ver = "2.0.8"
+                    buildVer = "2.0.8"
                     sdkVer = "6.0.0.2365"
                     miscBitMap = 0x00F7_FF7C
                     subSigMap = 0x0001_0400
@@ -181,10 +187,11 @@ public object FixProtocolVersion {
                     buildTime = 1640921786L
                     ssoVersion = 19
                 }
-                impl.id <= 537151363 -> impl.apply {
+                impl.id < 537151363 -> impl.apply {
                     apkId = "com.tencent.minihd.qq"
                     id = 537151363
-                    ver = "8.9.33.614"
+                    ver = "8.9.33"
+                    buildVer = "8.9.33.614"
                     sdkVer = "6.0.0.2433"
                     miscBitMap = 0x08F7_FF7C
                     subSigMap = 0x0001_0400
@@ -224,7 +231,7 @@ public object FixProtocolVersion {
     @JvmStatic
     public fun info(): Map<BotConfiguration.MiraiProtocol, String> {
         return MiraiProtocolInternal.protocols.mapValues { (protocol, info) ->
-            val version = info.field("ver", "???")
+            val version = info.field("buildVer", null) ?: info.field("ver", "???")
             val epochSecond = info.field("buildTime", 0L)
             val datetime = OffsetDateTime.ofInstant(Instant.ofEpochSecond(epochSecond), ZoneId.systemDefault())
 
