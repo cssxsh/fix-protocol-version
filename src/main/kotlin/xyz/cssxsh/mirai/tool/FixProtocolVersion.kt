@@ -231,7 +231,7 @@ public object FixProtocolVersion {
     @JvmStatic
     public fun info(): Map<BotConfiguration.MiraiProtocol, String> {
         return MiraiProtocolInternal.protocols.mapValues { (protocol, info) ->
-            val version = info.field("buildVer", null) ?: info.field("ver", "???")
+            val version = info.field("buildVer", null as String?) ?: info.field("ver", "???")
             val epochSecond = info.field("buildTime", 0L)
             val datetime = OffsetDateTime.ofInstant(Instant.ofEpochSecond(epochSecond), ZoneId.systemDefault())
 
