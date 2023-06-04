@@ -3,6 +3,7 @@ package xyz.cssxsh.mirai.tool
 import kotlinx.serialization.json.*
 import net.mamoe.mirai.internal.utils.*
 import net.mamoe.mirai.utils.*
+import java.io.*
 import java.net.*
 import java.time.*
 
@@ -232,12 +233,14 @@ public object FixProtocolVersion {
 
     @JvmStatic
     public fun sync(protocol: BotConfiguration.MiraiProtocol) {
-        val url = when (protocol) {
+        val (file, url) = when (protocol) {
             BotConfiguration.MiraiProtocol.ANDROID_PHONE -> {
-                URL("https://raw.githubusercontent.com/RomiChan/protocol-versions/master/android_phone.json")
+                File("android_phone.json") to
+                    URL("https://raw.githubusercontent.com/RomiChan/protocol-versions/master/android_phone.json")
             }
             BotConfiguration.MiraiProtocol.ANDROID_PAD -> {
-                URL("https://raw.githubusercontent.com/RomiChan/protocol-versions/master/android_pad.json")
+                File("android_pad.json") to
+                    URL("https://raw.githubusercontent.com/RomiChan/protocol-versions/master/android_pad.json")
             }
             else -> {
                 throw IllegalArgumentException("不支持同步的协议: ${protocol.name}")
@@ -252,25 +255,65 @@ public object FixProtocolVersion {
         } finally {
             System.setProperty("java.net.useSystemProxies", system)
         }
-        val json = url.openConnection(proxy)
-            .getInputStream().use { it.readBytes() }
-            .decodeToString()
-            .let { Json.parseToJsonElement(it).jsonObject }
+
+        val json: JsonObject = kotlin.runCatching {
+            url.openConnection(proxy)
+                .getInputStream().use { it.readBytes() }
+                .decodeToString()
+        }.fold(
+            onSuccess = { text ->
+                val online = Json.parseToJsonElement(text).jsonObject
+                if (file.isFile) {
+                    val local = Json.parseToJsonElement(file.readText()).jsonObject
+                    if (local.getValue("dump_time").jsonPrimitive.long <
+                        online.getValue("dump_time").jsonPrimitive.long) {
+                        file.writeText(text)
+                        online
+                    } else {
+                        local
+                    }
+                } else {
+                    online
+                }
+            },
+            onFailure = { cause ->
+                if (file.isFile) {
+                    Json.parseToJsonElement(file.readText()).jsonObject
+                } else {
+                    throw FileNotFoundException(file.path).initCause(cause)
+                }
+            }
+        )
 
         MiraiProtocolInternal.protocols.compute(protocol) { _, impl ->
-            impl!!.apply {
-                apkId = json.getValue("apk_id").jsonPrimitive.content
-                id = json.getValue("app_id").jsonPrimitive.long
-                buildVer = json.getValue("sort_version_name").jsonPrimitive.content
-                ver = buildVer.substringBeforeLast(".")
-                sdkVer = json.getValue("sdk_version").jsonPrimitive.content
-                miscBitMap = json.getValue("misc_bitmap").jsonPrimitive.int
-                subSigMap = json.getValue("sub_sig_map").jsonPrimitive.int
-                mainSigMap = json.getValue("main_sig_map").jsonPrimitive.int
-                sign = json.getValue("apk_sign").jsonPrimitive.content.hexToBytes().toUHexString(" ")
-                buildTime = json.getValue("build_time").jsonPrimitive.long
-                ssoVersion = json.getValue("sso_version").jsonPrimitive.int
-                appKey = json.getValue("app_key").jsonPrimitive.content
+            when {
+                null == impl -> null
+                impl.runCatching { id }.isFailure -> impl.change {
+                    apkId = json.getValue("apk_id").jsonPrimitive.content
+                    id = json.getValue("app_id").jsonPrimitive.long
+                    ver = json.getValue("sort_version_name").jsonPrimitive.content
+                    sdkVer = json.getValue("sdk_version").jsonPrimitive.content
+                    miscBitMap = json.getValue("misc_bitmap").jsonPrimitive.int
+                    subSigMap = json.getValue("sub_sig_map").jsonPrimitive.int
+                    mainSigMap = json.getValue("main_sig_map").jsonPrimitive.int
+                    sign = json.getValue("apk_sign").jsonPrimitive.content.hexToBytes().toUHexString(" ")
+                    buildTime = json.getValue("build_time").jsonPrimitive.long
+                    ssoVersion = json.getValue("sso_version").jsonPrimitive.int
+                }
+                else -> impl.apply {
+                    apkId = json.getValue("apk_id").jsonPrimitive.content
+                    id = json.getValue("app_id").jsonPrimitive.long
+                    buildVer = json.getValue("sort_version_name").jsonPrimitive.content
+                    ver = buildVer.substringBeforeLast(".")
+                    sdkVer = json.getValue("sdk_version").jsonPrimitive.content
+                    miscBitMap = json.getValue("misc_bitmap").jsonPrimitive.int
+                    subSigMap = json.getValue("sub_sig_map").jsonPrimitive.int
+                    mainSigMap = json.getValue("main_sig_map").jsonPrimitive.int
+                    sign = json.getValue("apk_sign").jsonPrimitive.content.hexToBytes().toUHexString(" ")
+                    buildTime = json.getValue("build_time").jsonPrimitive.long
+                    ssoVersion = json.getValue("sso_version").jsonPrimitive.int
+                    appKey = json.getValue("app_key").jsonPrimitive.content
+                }
             }
         }
     }
