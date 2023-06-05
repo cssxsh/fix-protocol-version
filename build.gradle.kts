@@ -28,7 +28,7 @@ repositories {
 dependencies {
     testImplementation(kotlin("test"))
     //
-    implementation(platform("net.mamoe:mirai-bom:2.15.0-dev-93"))
+    implementation(platform("net.mamoe:mirai-bom:2.15.0-dev-98"))
     compileOnly("net.mamoe:mirai-core")
     compileOnly("net.mamoe:mirai-core-utils")
     compileOnly("net.mamoe:mirai-console-compiler-common")

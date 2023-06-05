@@ -20,6 +20,16 @@ public object FixProtocolVersionPlugin : KotlinPlugin(
         } catch (cause: Throwable) {
             logger.error("协议版本升级失败", cause)
         }
+        logger.info("注册服务...")
+        try {
+            Services.register("net.mamoe.mirai.internal.spi.EncryptService", "xyz.cssxsh.mirai.tool.TLV544Provider") {
+                return@register TLV544Provider()
+            }
+        } catch (_: NoClassDefFoundError) {
+            // ...
+        } catch (cause: Throwable) {
+            logger.warning("注册服务失败", cause)
+        }
     }
 
     override fun onEnable() {
