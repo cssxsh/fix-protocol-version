@@ -14,7 +14,10 @@ public object FixProtocolVersionPlugin : KotlinPlugin(
     }
 ) {
     override fun PluginComponentStorage.onLoad() {
+        reloadPluginConfig(ProxyConfig)
+
         logger.info("协议版本检查更新...")
+        FixProtocolVersion.proxy = ProxyConfig.urlPattern;
         try {
             FixProtocolVersion.update()
         } catch (cause: Throwable) {

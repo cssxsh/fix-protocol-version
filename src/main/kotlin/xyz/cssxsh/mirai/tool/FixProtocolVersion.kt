@@ -10,6 +10,8 @@ import java.time.*
 @Suppress("INVISIBLE_MEMBER", "INVISIBLE_REFERENCE")
 public object FixProtocolVersion {
 
+    public var proxy: String = "%s"
+
     private val clazz = MiraiProtocolInternal::class.java
 
     private val constructor = clazz.constructors.single()
@@ -76,6 +78,11 @@ public object FixProtocolVersion {
 
     @JvmStatic
     public fun update() {
+        var a = proxy
+        if (proxy == "%s") {
+            a = "无"
+        }
+        FixProtocolVersionPlugin.logger.info("使用的Github代理:${a}")
         MiraiProtocolInternal.protocols.compute(BotConfiguration.MiraiProtocol.ANDROID_PHONE) { _, impl ->
             when {
                 null == impl -> null
@@ -236,11 +243,11 @@ public object FixProtocolVersion {
         val (file, url) = when (protocol) {
             BotConfiguration.MiraiProtocol.ANDROID_PHONE -> {
                 File("android_phone.json") to
-                    URL("https://raw.githubusercontent.com/RomiChan/protocol-versions/master/android_phone.json")
+                    URL(String.format(proxy,"https://raw.githubusercontent.com/RomiChan/protocol-versions/master/android_phone.json"))
             }
             BotConfiguration.MiraiProtocol.ANDROID_PAD -> {
                 File("android_pad.json") to
-                    URL("https://raw.githubusercontent.com/RomiChan/protocol-versions/master/android_pad.json")
+                    URL(String.format(proxy,"https://raw.githubusercontent.com/RomiChan/protocol-versions/master/android_pad.json"))
             }
             else -> {
                 throw IllegalArgumentException("不支持同步的协议: ${protocol.name}")
