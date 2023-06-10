@@ -5,6 +5,7 @@ import net.mamoe.mirai.console.command.CommandManager.INSTANCE.unregister
 import net.mamoe.mirai.console.extension.*
 import net.mamoe.mirai.console.plugin.jvm.*
 import net.mamoe.mirai.utils.*
+import java.io.File
 
 public object FixProtocolVersionPlugin : KotlinPlugin(
     JvmPluginDescription(
@@ -19,6 +20,10 @@ public object FixProtocolVersionPlugin : KotlinPlugin(
         logger.info("协议版本检查更新...")
         try {
             FixProtocolVersion.update()
+            for (protocol in BotConfiguration.MiraiProtocol.values()) {
+                val file = File("${protocol.name.lowercase()}.json")
+                if (file.exists()) FixProtocolVersion.sync(protocol)
+            }
         } catch (cause: Throwable) {
             logger.error("协议版本升级失败", cause)
         }
