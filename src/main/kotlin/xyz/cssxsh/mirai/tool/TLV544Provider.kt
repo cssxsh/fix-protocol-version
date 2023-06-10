@@ -21,6 +21,8 @@ public class TLV544Provider : EncryptService {
         if (tlvType != 0x544) return null
         val command = context.extraArgs[EncryptServiceContext.KEY_COMMAND_STR]
 
+        logger.info("t544 command: $command")
+
         val name = MiraiProtocolInternal[BotConfiguration.MiraiProtocol.ANDROID_PAD].ver
         val version = MiraiProtocolInternal[BotConfiguration.MiraiProtocol.ANDROID_PAD].sdkVer
         val guid = payload.sliceArray(if (payload.last().toInt() == 0) 6 until 22 else 10 until 26).toUHexString("")
@@ -31,6 +33,6 @@ public class TLV544Provider : EncryptService {
             else -> "v2"
         }
 
-        return TODO()
+        return null
     }
 }
