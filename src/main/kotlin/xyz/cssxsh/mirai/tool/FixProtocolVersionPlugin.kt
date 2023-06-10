@@ -1,5 +1,7 @@
 package xyz.cssxsh.mirai.tool
 
+import net.mamoe.mirai.console.command.CommandManager.INSTANCE.register
+import net.mamoe.mirai.console.command.CommandManager.INSTANCE.unregister
 import net.mamoe.mirai.console.extension.*
 import net.mamoe.mirai.console.plugin.jvm.*
 import net.mamoe.mirai.utils.*
@@ -41,5 +43,10 @@ public object FixProtocolVersionPlugin : KotlinPlugin(
                 }
             }
         }
+        FixProtocolVersionCommand.register()
+    }
+
+    override fun onDisable() {
+        FixProtocolVersionCommand.unregister()
     }
 }
