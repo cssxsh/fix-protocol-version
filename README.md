@@ -17,6 +17,15 @@
 ~~出现 `Mirai版本低于预期，将升级协议版本` 就表示工作正常，因为这只是临时性修复，之后的Mirai版本会另外再修复~~  
 出现 `协议版本检查更新...` 就表示插件开始工作
 
+### 命令
+
+> since 1.6
+
+*   `protocol sync <type>` 在线同步协议  
+    例如 `protocol sync ANDROID_PAD`
+
+*   `protocol info` 显示当前协议信息  
+
 ## Mirai Core 使用方法
 
 `since 1.1.0`
