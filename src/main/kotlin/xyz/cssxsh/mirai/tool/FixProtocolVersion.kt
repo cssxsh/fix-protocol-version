@@ -67,7 +67,7 @@ public object FixProtocolVersion {
         var sdkVer: String = impl.field("sdkVer", "")
         var miscBitMap: Int = impl.field("miscBitMap", 0)
         var subSigMap: Int = impl.field("subSigMap", 0)
-        var mainSigMap: Int  = impl.field("mainSigMap", 0)
+        var mainSigMap: Int = impl.field("mainSigMap", 0)
         var sign: String = impl.field("sign", "")
         var buildTime: Long = impl.field("buildTime", 0)
         var ssoVersion: Int = impl.field("ssoVersion", 0)
@@ -81,28 +81,28 @@ public object FixProtocolVersion {
                 null == impl -> null
                 impl.runCatching { id }.isFailure -> impl.change {
                     apkId = "com.tencent.mobileqq"
-                    id = 537153294
-                    ver = "8.9.35.10440"
-                    sdkVer = "6.0.0.2535"
+                    id = 537163098
+                    ver = "8.9.58.11170"
+                    sdkVer = "6.0.0.2545"
                     miscBitMap = 0x08F7_FF7C
                     subSigMap = 0x0001_0400
-                    mainSigMap = 0x00FF_32F2
+                    mainSigMap = 0x0214_10E0
                     sign = "A6 B7 45 BF 24 A2 C2 77 52 77 16 F6 F3 6E B6 8D"
-                    buildTime = 1676531414L
-                    ssoVersion = 19
+                    buildTime = 1684467300L
+                    ssoVersion = 20
                 }
-                impl.id < 537153294 -> impl.apply {
+                impl.id < 537163098 -> impl.apply {
                     apkId = "com.tencent.mobileqq"
-                    id = 537153294
-                    ver = "8.9.35"
-                    buildVer = "8.9.35.10440"
-                    sdkVer = "6.0.0.2535"
+                    id = 537163098
+                    ver = "8.9.58"
+                    buildVer = "8.9.58.11170"
+                    sdkVer = "6.0.0.2545"
                     miscBitMap = 0x08F7_FF7C
                     subSigMap = 0x0001_0400
-                    mainSigMap = 0x00FF_32F2
+                    mainSigMap = 0x0214_10E0
                     sign = "A6 B7 45 BF 24 A2 C2 77 52 77 16 F6 F3 6E B6 8D"
-                    buildTime = 1676531414L
-                    ssoVersion = 19
+                    buildTime = 1684467300L
+                    ssoVersion = 20
                     appKey = "0S200MNJT807V3GE"
                     supportsQRLogin = false
                 }
@@ -114,28 +114,28 @@ public object FixProtocolVersion {
                 null == impl -> null
                 impl.runCatching { id }.isFailure -> impl.change {
                     apkId = "com.tencent.mobileqq"
-                    id = 537152242
-                    ver = "8.9.35.10440"
-                    sdkVer = "6.0.0.2535"
+                    id = 537161402
+                    ver = "8.9.58.11170"
+                    sdkVer = "6.0.0.2545"
                     miscBitMap = 0x08F7_FF7C
                     subSigMap = 0x0001_0400
-                    mainSigMap = 0x00FF_32F2
+                    mainSigMap = 0x0214_10E0
                     sign = "A6 B7 45 BF 24 A2 C2 77 52 77 16 F6 F3 6E B6 8D"
-                    buildTime = 1676531414L
-                    ssoVersion = 19
+                    buildTime = 1684467300L
+                    ssoVersion = 20
                 }
-                impl.id < 537152242 -> impl.apply {
+                impl.id < 537161402 -> impl.apply {
                     apkId = "com.tencent.mobileqq"
-                    id = 537152242
-                    ver = "8.9.35"
-                    buildVer = "8.9.35.10440"
-                    sdkVer = "6.0.0.2535"
+                    id = 537161402
+                    ver = "8.9.58"
+                    buildVer = "8.9.58.11170"
+                    sdkVer = "6.0.0.2545"
                     miscBitMap = 0x08F7_FF7C
                     subSigMap = 0x0001_0400
-                    mainSigMap = 0x00FF_32F2
+                    mainSigMap = 0x0214_10E0
                     sign = "A6 B7 45 BF 24 A2 C2 77 52 77 16 F6 F3 6E B6 8D"
-                    buildTime = 1676531414L
-                    ssoVersion = 19
+                    buildTime = 1684467300L
+                    ssoVersion = 20
                     appKey = "0S200MNJT807V3GE"
                     supportsQRLogin = false
                 }
