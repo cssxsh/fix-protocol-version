@@ -23,6 +23,9 @@ jobs:
           distribution: 'adopt'
           java-version: '11'
 
+      - name: MKDIR
+        run: mkdir -p src/main/resources/xyz/cssxsh/mirai/tool
+
       - name: JNI Download For Windows
         uses: bettermarks/action-artifact-download@0.3.0
         with:
