@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "xyz.cssxsh.mirai"
-version = "1.6.0"
+version = "1.7.0"
 
 mavenCentralPublish {
     useCentralS01()
@@ -44,8 +44,8 @@ kotlin {
 }
 
 mirai {
-    coreVersion = "2.14.0"
-    consoleVersion = "2.14.0"
+    coreVersion = "2.15.0-dev-98"
+    consoleVersion = "2.15.0-dev-98"
 }
 
 tasks {

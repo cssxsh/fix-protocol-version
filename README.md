@@ -19,7 +19,7 @@
 
 ### 命令
 
-> since 1.6
+> since 1.6.0
 
 *   `protocol sync <type>` 在线同步协议  
     例如 `protocol sync ANDROID_PAD`
@@ -28,7 +28,7 @@
 
 ## Mirai Core 使用方法
 
-`since 1.1.0`
+> since 1.1.0
 
 下载 `mirai2.jar`, 然后作为 lib 引用  
 
@@ -44,6 +44,10 @@ public class Example {
     // 升级协议版本
     public static void update() {
         FixProtocolVersion.update();
+    }
+    // 同步协议版本
+    public static void update() {
+        FixProtocolVersion.sync(BotConfiguration.MiraiProtocol.ANDROID_PAD);
     }
     // 获取协议版本信息 你可以用这个来检查update是否正常工作
     public static Map<MiraiProtocol, String> info() {
