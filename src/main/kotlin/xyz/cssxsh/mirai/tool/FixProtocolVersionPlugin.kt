@@ -29,9 +29,12 @@ public object FixProtocolVersionPlugin : KotlinPlugin(
         }
         logger.info("注册服务...")
         try {
-            Services.register("net.mamoe.mirai.internal.spi.EncryptService", "xyz.cssxsh.mirai.tool.TLV544Provider") {
-                return@register TLV544Provider()
-            }
+            TLV544Provider
+            Services.register(
+                "net.mamoe.mirai.internal.spi.EncryptService",
+                "xyz.cssxsh.mirai.tool.TLV544Provider",
+                ::TLV544Provider
+            )
         } catch (_: NoClassDefFoundError) {
             // ...
         } catch (cause: Throwable) {

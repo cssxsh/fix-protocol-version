@@ -4,14 +4,42 @@ import kotlinx.serialization.json.*
 import net.mamoe.mirai.internal.spi.*
 import net.mamoe.mirai.internal.utils.*
 import net.mamoe.mirai.utils.*
-import java.net.URL
+import java.io.File
 import java.util.*
 
 public class TLV544Provider : EncryptService {
     internal companion object {
-        val SALT_V1 = arrayOf("810_7", "810_24", "810_25")
+        val SALT_V1 = arrayOf("810_2", "810_7", "810_24", "810_25")
         val SALT_V2 = arrayOf("810_9", "810_a", "810_d", "810_f")
         val SALT_V3 = arrayOf("812_a")
+
+        @JvmStatic
+        internal external fun sign(payload: ByteArray): ByteArray
+
+        init {
+            val os = when (val name = System.getProperty("os.name")) {
+                "Mac OS X" -> "macos"
+                "Linux" -> if ("termux" in System.getProperty("user.dir")) "android" else "linux"
+                else -> when {
+                    name.startsWith("Win") -> "windows"
+                    "The Android Project" == System.getProperty("java.specification.vendor") -> "android"
+                    else -> throw RuntimeException("Unknown OS $name")
+                }
+            }
+            val arch = when (val name = System.getProperty("os.arch")) {
+                "x86_64", "amd64" -> "x64"
+                "aarch64" -> "arm64"
+                else -> throw RuntimeException("Unknown arch $name")
+            }
+            val filename = System.mapLibraryName("t544-enc-${os}-${arch}")
+            val file = File(System.getProperty("xyz.cssxsh.mirai.tool.t544", filename))
+            if (file.isFile.not()) {
+                this::class.java.getResource(filename)?.let { resource ->
+                    file.writeBytes(resource.readBytes())
+                }
+            }
+            System.load(file.absolutePath)
+        }
     }
 
     private val logger: MiraiLogger = MiraiLogger.Factory.create(this::class)
@@ -23,16 +51,10 @@ public class TLV544Provider : EncryptService {
 
         logger.info("t544 command: $command")
 
-        val name = MiraiProtocolInternal[BotConfiguration.MiraiProtocol.ANDROID_PAD].ver
-        val version = MiraiProtocolInternal[BotConfiguration.MiraiProtocol.ANDROID_PAD].sdkVer
-        val guid = payload.sliceArray(if (payload.last().toInt() == 0) 6 until 22 else 10 until 26).toUHexString("")
-        val mode = when (command) {
-            in SALT_V1 -> "v1"
-            in SALT_V2 -> "v2"
-            in SALT_V3 -> "v3"
-            else -> "v2"
+        if (payload.last().toInt() == 0) {
+            return sign(payload.copyInto(ByteArray(payload.size), 4, 4))
         }
 
-        return null
+        return sign(payload)
     }
 }

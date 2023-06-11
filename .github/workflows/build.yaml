@@ -23,6 +23,41 @@ jobs:
           distribution: 'adopt'
           java-version: '11'
 
+      - name: JNI Download For Windows
+        uses: bettermarks/action-artifact-download
+        with:
+          repo: cssxsh/t544_enc
+          token: ${{ secrets.GITHUB_TOKEN }}
+          artifact_name: push-build-windows
+
+      - name: JNI Download For Linux
+        uses: bettermarks/action-artifact-download
+        with:
+          repo: cssxsh/t544_enc
+          token: ${{ secrets.GITHUB_TOKEN }}
+          artifact_name: push-build-linux
+
+      - name: JNI Download For Android
+        uses: bettermarks/action-artifact-download
+        with:
+          repo: cssxsh/t544_enc
+          token: ${{ secrets.GITHUB_TOKEN }}
+          artifact_name: push-build-android
+
+      - name: JNI Download For MacOS
+        uses: bettermarks/action-artifact-download
+        with:
+          repo: cssxsh/t544_enc
+          token: ${{ secrets.GITHUB_TOKEN }}
+          artifact_name: push-build-macos
+
+      - name: Copy Artifact
+        run: |
+          cp push-build-windows/* src/main/resources/xyz/cssxsh/mirai/tool
+          cp push-build-linux/* src/main/resources/xyz/cssxsh/mirai/tool
+          cp push-build-android/* src/main/resources/xyz/cssxsh/mirai/tool
+          cp push-build-macos/* src/main/resources/xyz/cssxsh/mirai/tool
+
       - name: chmod -R 777 *
         run: chmod -R 777 *
 
