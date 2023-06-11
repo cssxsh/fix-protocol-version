@@ -53,15 +53,14 @@ jobs:
 
       - name: Unzip Artifact
         run: |
-          ls -l
           mkdir -p src/main/resources/xyz/cssxsh/mirai/tool
           unzip push-build-windows -d src/main/resources/xyz/cssxsh/mirai/tool
           unzip push-build-linux -d src/main/resources/xyz/cssxsh/mirai/tool
           unzip push-build-android -d src/main/resources/xyz/cssxsh/mirai/tool
           unzip push-build-macos -d src/main/resources/xyz/cssxsh/mirai/tool
 
-      - name: chmod -R 777 *
-        run: chmod -R 777 *
+      - name: chmod -R 777 gradlew
+        run: chmod -R 777 gradlew
 
       - name: BuildPlugin
         run: ./gradlew buildPlugin
