@@ -55,10 +55,10 @@ jobs:
         run: |
           ls -l
           mkdir -p src/main/resources/xyz/cssxsh/mirai/tool
-          unzip push-build-windows.zip -d src/main/resources/xyz/cssxsh/mirai/tool
-          unzip push-build-linux.zip -d src/main/resources/xyz/cssxsh/mirai/tool
-          unzip push-build-android.zip -d src/main/resources/xyz/cssxsh/mirai/tool
-          unzip push-build-macos.zip -d src/main/resources/xyz/cssxsh/mirai/tool
+          unzip push-build-windows -d src/main/resources/xyz/cssxsh/mirai/tool
+          unzip push-build-linux -d src/main/resources/xyz/cssxsh/mirai/tool
+          unzip push-build-android -d src/main/resources/xyz/cssxsh/mirai/tool
+          unzip push-build-macos -d src/main/resources/xyz/cssxsh/mirai/tool
 
       - name: chmod -R 777 *
         run: chmod -R 777 *
