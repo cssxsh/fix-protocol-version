@@ -23,16 +23,12 @@ jobs:
           distribution: 'adopt'
           java-version: '11'
 
-      - name: MKDIR
-        run: mkdir -p src/main/resources/xyz/cssxsh/mirai/tool
-
       - name: JNI Download For Windows
         uses: bettermarks/action-artifact-download@0.3.0
         with:
           repo: cssxsh/t544_enc
           token: ${{ secrets.GITHUB_TOKEN }}
           artifact_name: push-build-windows
-          rename: src/main/resources/xyz/cssxsh/mirai/tool
 
       - name: JNI Download For Linux
         uses: bettermarks/action-artifact-download@0.3.0
@@ -40,7 +36,6 @@ jobs:
           repo: cssxsh/t544_enc
           token: ${{ secrets.GITHUB_TOKEN }}
           artifact_name: push-build-linux
-          rename: src/main/resources/xyz/cssxsh/mirai/tool
 
       - name: JNI Download For Android
         uses: bettermarks/action-artifact-download@0.3.0
@@ -48,7 +43,6 @@ jobs:
           repo: cssxsh/t544_enc
           token: ${{ secrets.GITHUB_TOKEN }}
           artifact_name: push-build-android
-          rename: src/main/resources/xyz/cssxsh/mirai/tool
 
       - name: JNI Download For MacOS
         uses: bettermarks/action-artifact-download@0.3.0
@@ -56,7 +50,14 @@ jobs:
           repo: cssxsh/t544_enc
           token: ${{ secrets.GITHUB_TOKEN }}
           artifact_name: push-build-macos
-          rename: src/main/resources/xyz/cssxsh/mirai/tool
+
+      - name: Unzip Artifact
+        run: |
+          mkdir -p src/main/resources/xyz/cssxsh/mirai/tool
+          unzip push-build-windows.zip -d src/main/resources/xyz/cssxsh/mirai/tool
+          unzip push-build-linux.zip -d src/main/resources/xyz/cssxsh/mirai/tool
+          unzip push-build-android.zip -d src/main/resources/xyz/cssxsh/mirai/tool
+          unzip push-build-macos.zip -d src/main/resources/xyz/cssxsh/mirai/tool
 
       - name: chmod -R 777 *
         run: chmod -R 777 *
