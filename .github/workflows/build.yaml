@@ -53,6 +53,7 @@ jobs:
 
       - name: Unzip Artifact
         run: |
+          ls -l
           mkdir -p src/main/resources/xyz/cssxsh/mirai/tool
           unzip push-build-windows.zip -d src/main/resources/xyz/cssxsh/mirai/tool
           unzip push-build-linux.zip -d src/main/resources/xyz/cssxsh/mirai/tool
