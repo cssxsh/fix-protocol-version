@@ -46,7 +46,7 @@ public class Example {
         FixProtocolVersion.update();
     }
     // 同步协议版本
-    public static void update() {
+    public static void sync() {
         FixProtocolVersion.sync(BotConfiguration.MiraiProtocol.ANDROID_PAD);
     }
     // 获取协议版本信息 你可以用这个来检查update是否正常工作
