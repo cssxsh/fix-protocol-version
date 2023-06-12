@@ -92,7 +92,7 @@ tasks {
             """.trimIndent().let {
                 folder.resolve("start.cmd").writeText(it)
             }
-            """java -D"file.encoding=utf-8" -cp "./libs/*" "net.mamoe.mirai.console.terminal.MiraiConsoleTerminalLoader""".let {
+            """java -D"file.encoding=utf-8" -cp "./libs/*" net.mamoe.mirai.console.terminal.MiraiConsoleTerminalLoader""".let {
                 folder.resolve("start.sh").writeText(it)
             }
             folder.resolve("README.txt").writeText("""
