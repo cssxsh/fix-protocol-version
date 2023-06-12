@@ -27,6 +27,7 @@ public class TLV544Provider : EncryptService {
                 }
             }
             val arch = when (val name = System.getProperty("os.arch")) {
+                "x86" -> "x86"
                 "x86_64", "amd64" -> "x64"
                 "aarch64" -> "arm64"
                 else -> throw RuntimeException("Unknown arch $name")
