@@ -19,7 +19,7 @@ public class TLV544Provider : EncryptService {
         init {
             val os = when (val name = System.getProperty("os.name")) {
                 "Mac OS X" -> "macos"
-                "Linux" -> if ("termux" in System.getProperty("user.dir")) "android" else "linux"
+                "Linux" -> if (System.getenv("TERMUX_VERSION") != null) "android" else "linux"
                 else -> when {
                     name.startsWith("Win") -> "windows"
                     "The Android Project" == System.getProperty("java.specification.vendor") -> "android"
