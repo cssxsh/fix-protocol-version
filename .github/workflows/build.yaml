@@ -26,28 +26,28 @@ jobs:
       - name: JNI Download For Windows
         uses: bettermarks/action-artifact-download@0.3.0
         with:
-          repo: cssxsh/t544_enc
+          repo: LaoLittle/t544_enc
           token: ${{ secrets.GITHUB_TOKEN }}
           artifact_name: push-build-windows
 
       - name: JNI Download For Linux
         uses: bettermarks/action-artifact-download@0.3.0
         with:
-          repo: cssxsh/t544_enc
+          repo: LaoLittle/t544_enc
           token: ${{ secrets.GITHUB_TOKEN }}
           artifact_name: push-build-linux
 
       - name: JNI Download For Android
         uses: bettermarks/action-artifact-download@0.3.0
         with:
-          repo: cssxsh/t544_enc
+          repo: LaoLittle/t544_enc
           token: ${{ secrets.GITHUB_TOKEN }}
           artifact_name: push-build-android
 
       - name: JNI Download For MacOS
         uses: bettermarks/action-artifact-download@0.3.0
         with:
-          repo: cssxsh/t544_enc
+          repo: LaoLittle/t544_enc
           token: ${{ secrets.GITHUB_TOKEN }}
           artifact_name: push-build-macos
 

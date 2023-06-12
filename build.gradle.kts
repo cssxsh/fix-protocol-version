@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "xyz.cssxsh.mirai"
-version = "1.7.0"
+version = "1.7.1"
 
 mavenCentralPublish {
     useCentralS01()
@@ -75,8 +75,24 @@ tasks {
             uri("https://raw.githubusercontent.com/RomiChan/protocol-versions/master/android_pad.json").toURL().let {
                 folder.resolve("android_pad.json").writeBytes(it.readBytes())
             }
-            """java -D"file.encoding=utf-8" -cp "./libs/*" net.mamoe.mirai.console.terminal.MiraiConsoleTerminalLoader""".let {
+            """
+                @echo off
+                setlocal
+                set JAVA_BINARY="java"
+                if exist "java-home" set JAVA_BINARY=".\java-home\bin\java.exe"
+                
+                %JAVA_BINARY% -version
+                %JAVA_BINARY% -D"file.encoding=utf-8" -cp "./libs/*" "net.mamoe.mirai.console.terminal.MiraiConsoleTerminalLoader"
+                
+                set EL=%ERRORLEVEL%
+                if %EL% NEQ 0 (
+                    echo Process exited with %EL%
+                    pause
+                )
+            """.trimIndent().let {
                 folder.resolve("start.cmd").writeText(it)
+            }
+            """java -D"file.encoding=utf-8" -cp "./libs/*" "net.mamoe.mirai.console.terminal.MiraiConsoleTerminalLoader""".let {
                 folder.resolve("start.sh").writeText(it)
             }
             folder.resolve("README.txt").writeText("""
@@ -87,6 +103,30 @@ tasks {
                 原理是回退到风控较轻的 旧版本协议 8.8.88，顺便这个 8.8.88 的信息实际上是 ANDROID_PHONE 的，所以会顶号
                 
                 这是独立的开发版本整合包，不能替换 mcl 的文件来使用
+                
+                如果出现 'java' 不是内部或外部命令，也不是可运行的程序
+                说明你没有安装好 Java，你可以选择本地补充安装
+                
+                本地补充安装（Windows）：
+                
+                自行二选一下载，然后解压全部文件 到 start.cmd 同目录，并将 jdk-17.0.7+7-jre 重命名为 java-home
+                
+                windows x64 版本
+                https://mirrors.tuna.tsinghua.edu.cn/Adoptium/17/jre/x64/windows/OpenJDK17U-jre_x64_windows_hotspot_17.0.7_7.zip
+                
+                windows x86 版本
+                https://mirrors.tuna.tsinghua.edu.cn/Adoptium/17/jre/x32/windows/OpenJDK17U-jre_x86-32_windows_hotspot_17.0.7_7.zip
+                
+                目录结构如下
+                ├───java-home (本地java目录，注意要解压全部文件，这里仅列出部分目录结构)
+                │   └───bin
+                │       └───java.exe
+                ├───start.cmd (WIN启动脚本)
+                ├───start.sh (Linux/MACOS启动脚本)
+                ├───libs (库目录，里面有mirai本体)
+                ├───logs (日志目录，里面有日志文件)
+                ├───plugins (插件目录)
+                └───android_pad.json (协议版本信息)
                 
                 整合包 by https://github.com/cssxsh
             """.trimIndent())
