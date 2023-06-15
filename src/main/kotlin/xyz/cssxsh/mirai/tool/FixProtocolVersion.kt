@@ -258,6 +258,10 @@ public object FixProtocolVersion {
 
         val json: JsonObject = kotlin.runCatching {
             url.openConnection(proxy)
+                .apply {
+                    connectTimeout = 60_000
+                    readTimeout = 60_000
+                }
                 .getInputStream().use { it.readBytes() }
                 .decodeToString()
         }.fold(
