@@ -22,7 +22,7 @@ public object FixProtocolVersionPlugin : KotlinPlugin(
             FixProtocolVersion.update()
             for (protocol in BotConfiguration.MiraiProtocol.values()) {
                 val file = File("${protocol.name.lowercase()}.json")
-                if (file.exists()) FixProtocolVersion.sync(protocol)
+                if (file.exists()) FixProtocolVersion.load(protocol)
             }
         } catch (cause: Throwable) {
             logger.error("协议版本升级失败", cause)

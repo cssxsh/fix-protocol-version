@@ -289,6 +289,18 @@ public object FixProtocolVersion {
             }
         )
 
+        store(protocol, json)
+    }
+    @JvmStatic
+    public fun load(protocol: BotConfiguration.MiraiProtocol) {
+        val file = File("${protocol.name.lowercase()}.json")
+        val json: JsonObject = Json.parseToJsonElement(file.readText()).jsonObject
+
+        store(protocol, json)
+    }
+
+    @JvmStatic
+    private fun store(protocol: BotConfiguration.MiraiProtocol, json: JsonObject) {
         MiraiProtocolInternal.protocols.compute(protocol) { _, impl ->
             when {
                 null == impl -> null
