@@ -270,7 +270,8 @@ public object FixProtocolVersion {
                 if (file.isFile) {
                     val local = Json.parseToJsonElement(file.readText()).jsonObject
                     if (local.getValue("dump_time").jsonPrimitive.long <
-                        online.getValue("dump_time").jsonPrimitive.long) {
+                        online.getValue("dump_time").jsonPrimitive.long
+                    ) {
                         file.writeText(text)
                         online
                     } else {
@@ -291,6 +292,7 @@ public object FixProtocolVersion {
 
         store(protocol, json)
     }
+
     @JvmStatic
     public fun load(protocol: BotConfiguration.MiraiProtocol) {
         val file = File("${protocol.name.lowercase()}.json")
