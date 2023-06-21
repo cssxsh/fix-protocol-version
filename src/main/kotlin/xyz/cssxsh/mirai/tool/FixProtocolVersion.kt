@@ -278,6 +278,7 @@ public object FixProtocolVersion {
                         local
                     }
                 } else {
+                    file.writeText(text)
                     online
                 }
             },

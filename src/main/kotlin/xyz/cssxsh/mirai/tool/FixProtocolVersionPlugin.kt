@@ -11,7 +11,7 @@ public object FixProtocolVersionPlugin : KotlinPlugin(
     JvmPluginDescription(
         id = "xyz.cssxsh.mirai.fix-protocol-version",
         name = "fix-protocol-version",
-        version = "1.7.2"
+        version = "1.8.0"
     ) {
         author("cssxsh")
     }
@@ -22,7 +22,10 @@ public object FixProtocolVersionPlugin : KotlinPlugin(
             FixProtocolVersion.update()
             for (protocol in BotConfiguration.MiraiProtocol.values()) {
                 val file = File("${protocol.name.lowercase()}.json")
-                if (file.exists()) FixProtocolVersion.load(protocol)
+                if (file.exists()) {
+                    logger.info("$protocol load from ${file.toPath().toUri()}")
+                    FixProtocolVersion.load(protocol)
+                }
             }
         } catch (cause: Throwable) {
             logger.error("协议版本升级失败", cause)

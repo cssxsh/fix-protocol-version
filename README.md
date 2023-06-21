@@ -24,7 +24,12 @@
 *   `protocol sync <type>` 在线同步协议  
     例如 `protocol sync ANDROID_PAD`
 
-*   `protocol info` 显示当前协议信息  
+*   `protocol info` 显示当前协议信息
+
+> since 1.8.0
+
+*   `protocol load` 加载本地协议文件
+    例如 `protocol load ANDROID_PAD`
 
 ## Mirai Core 使用方法
 
@@ -48,6 +53,10 @@ public class Example {
     // 同步协议版本
     public static void sync() {
         FixProtocolVersion.sync(BotConfiguration.MiraiProtocol.ANDROID_PAD);
+    }
+    // 加载协议版本
+    public static void load() {
+        FixProtocolVersion.load(BotConfiguration.MiraiProtocol.ANDROID_PAD);
     }
     // 获取协议版本信息 你可以用这个来检查update是否正常工作
     public static Map<MiraiProtocol, String> info() {
