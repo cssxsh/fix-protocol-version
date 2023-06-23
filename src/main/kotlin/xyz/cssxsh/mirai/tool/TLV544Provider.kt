@@ -54,7 +54,8 @@ public class TLV544Provider : EncryptService {
 
         when (command) {
             in SALT_V2 -> {
-                sign(payload.copyInto(ByteArray(payload.size), 4, 4))
+                // from MiraiGo
+                sign(payload.copyInto(ByteArray(payload.size) { 0 }, 4, 4))
             }
             else -> {
                 sign(payload)
