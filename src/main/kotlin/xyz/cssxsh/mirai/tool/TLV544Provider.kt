@@ -52,7 +52,7 @@ public class TLV544Provider : EncryptService {
 
         logger.info("t544 command: $command")
 
-        when (command) {
+        return when (command) {
             in SALT_V2 -> {
                 // from MiraiGo
                 sign(payload.copyInto(ByteArray(payload.size) { 0 }, 4, 4))
@@ -61,7 +61,5 @@ public class TLV544Provider : EncryptService {
                 sign(payload)
             }
         }
-
-        return sign(payload)
     }
 }
