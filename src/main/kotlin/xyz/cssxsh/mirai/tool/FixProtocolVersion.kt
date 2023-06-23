@@ -273,12 +273,14 @@ public object FixProtocolVersion {
                         online.getValue("dump_time").jsonPrimitive.long
                     ) {
                         file.writeText(text)
+                        file.setLastModified(online.getValue("build_time").jsonPrimitive.long * 1000)
                         online
                     } else {
                         local
                     }
                 } else {
                     file.writeText(text)
+                    file.setLastModified(online.getValue("build_time").jsonPrimitive.long * 1000)
                     online
                 }
             },

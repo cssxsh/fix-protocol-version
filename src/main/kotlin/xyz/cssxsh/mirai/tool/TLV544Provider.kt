@@ -52,8 +52,13 @@ public class TLV544Provider : EncryptService {
 
         logger.info("t544 command: $command")
 
-        if (payload.last().toInt() == 0) {
-            return sign(payload.copyInto(ByteArray(payload.size), 4, 4))
+        when (command) {
+            in SALT_V2 -> {
+                sign(payload.copyInto(ByteArray(payload.size), 4, 4))
+            }
+            else -> {
+                sign(payload)
+            }
         }
 
         return sign(payload)
