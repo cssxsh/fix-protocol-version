@@ -211,20 +211,15 @@ public object FixProtocolVersion {
             when {
                 null == impl -> null
                 impl.runCatching { id }.isFailure -> impl.change {
-                    if (supportsQRLogin) return@change
-                    apkId = "com.tencent.minihd.qq"
                     id = 537128930
-                    ver = "5.8.9"
-                    sdkVer = "6.0.0.2433"
-                    miscBitMap = 0x08F7_FF7C
-                    subSigMap = 0x0001_0400
-                    mainSigMap = 0x001E_10E0
-                    sign = "AA 39 78 F4 1F D9 6F F9 91 4A 66 9E 18 64 74 C7"
-                    buildTime = 1595836208L
-                    ssoVersion = 12
+                    ver = "6.8.2.21241"
+                    buildTime = 1647227495
                 }
                 impl.id < 537128930 -> impl.apply {
-                    // TODO
+                    id = 537128930
+                    ver = "6.8.2"
+                    buildVer = "6.8.2.21241"
+                    buildTime = 1647227495
                 }
                 else -> impl
             }
