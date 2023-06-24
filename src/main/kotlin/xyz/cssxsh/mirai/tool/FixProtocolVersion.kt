@@ -180,28 +180,29 @@ public object FixProtocolVersion {
                 null == impl -> null
                 impl.runCatching { id }.isFailure -> impl.change {
                     apkId = "com.tencent.minihd.qq"
-                    id = 537151363
-                    ver = "8.9.33.614"
-                    sdkVer = "6.0.0.2433"
+                    id = 537155074
+                    ver = "8.9.50.611"
+                    sdkVer = "6.0.0.2535"
                     miscBitMap = 0x08F7_FF7C
                     subSigMap = 0x0001_0400
                     mainSigMap = 0x001E_10E0
                     sign = "AA 39 78 F4 1F D9 6F F9 91 4A 66 9E 18 64 74 C7"
-                    buildTime = 1640921786L
+                    buildTime = 1676531414L
                     ssoVersion = 19
                 }
                 impl.id < 537151363 -> impl.apply {
                     apkId = "com.tencent.minihd.qq"
-                    id = 537151363
-                    ver = "8.9.33"
-                    buildVer = "8.9.33.614"
-                    sdkVer = "6.0.0.2433"
+                    id = 537155074
+                    ver = "8.9.50"
+                    buildVer = "8.9.50.611"
+                    sdkVer = "6.0.0.2535"
                     miscBitMap = 0x08F7_FF7C
                     subSigMap = 0x0001_0400
                     mainSigMap = 0x001E_10E0
                     sign = "AA 39 78 F4 1F D9 6F F9 91 4A 66 9E 18 64 74 C7"
-                    buildTime = 1640921786L
+                    buildTime = 1676531414L
                     ssoVersion = 19
+                    appKey = "0S200MNJT807V3GE"
                     supportsQRLogin = false
                 }
                 else -> impl
