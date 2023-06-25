@@ -11,7 +11,7 @@ public object FixProtocolVersionPlugin : KotlinPlugin(
     JvmPluginDescription(
         id = "xyz.cssxsh.mirai.fix-protocol-version",
         name = "fix-protocol-version",
-        version = "1.8.3"
+        version = "1.8.4"
     ) {
         author("cssxsh")
     }
@@ -52,6 +52,8 @@ public object FixProtocolVersionPlugin : KotlinPlugin(
                 for ((_, info) in FixProtocolVersion.info()) {
                     appendLine(info)
                 }
+
+                if ("8.8.88" in this) appendLine().append("Android 8.8.88 协议疑似被拉黑，请谨慎尝试登录")
             }
         }
         FixProtocolVersionCommand.register()
