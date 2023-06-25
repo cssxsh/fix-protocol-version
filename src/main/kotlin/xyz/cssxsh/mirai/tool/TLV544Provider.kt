@@ -1,6 +1,7 @@
 package xyz.cssxsh.mirai.tool
 
 import kotlinx.serialization.json.*
+import net.mamoe.mirai.*
 import net.mamoe.mirai.internal.spi.*
 import net.mamoe.mirai.internal.utils.*
 import net.mamoe.mirai.utils.*
@@ -49,8 +50,13 @@ public class TLV544Provider : EncryptService {
     override fun encryptTlv(context: EncryptServiceContext, tlvType: Int, payload: ByteArray): ByteArray? {
         if (tlvType != 0x544) return null
         val command = context.extraArgs[EncryptServiceContext.KEY_COMMAND_STR]
+        val protocol = try {
+            context.extraArgs[EncryptServiceContext.KEY_BOT_PROTOCOL]
+        } catch (_: NoSuchElementException) {
+            Bot.getInstanceOrNull(context.id)?.configuration?.protocol
+        }
 
-        logger.info("t544 command: $command")
+        logger.info("t544 command: $command with $protocol")
 
         return when (command) {
             in SALT_V2 -> {
