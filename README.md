@@ -8,8 +8,10 @@
 ~~如果遇到 `code=45`，请切换到 `MACOS` 协议~~  
 `MACOS` 协议目前也会触发 `code=45`  
 
-再次强调，此插件仅用于修复 `code=235` 问题  
-他对 `code=45` 并没有明显效果 
+~~再次强调，此插件仅用于修复 `code=235` 问题~~  
+~~他对 `code=45` 并没有明显效果~~
+
+在 `1.7.0+` 中加入了 TLV544Provider, 但实际效果有限。
 
 ## Mirai Console 使用方法
 
@@ -28,7 +30,7 @@
 
 > since 1.8.0
 
-*   `protocol load` 加载本地协议文件
+*   `protocol load` 加载本地协议文件  
     例如 `protocol load ANDROID_PAD`
 
 ## Mirai Core 使用方法
