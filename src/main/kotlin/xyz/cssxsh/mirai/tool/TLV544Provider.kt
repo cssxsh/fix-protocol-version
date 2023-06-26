@@ -15,6 +15,9 @@ public class TLV544Provider : EncryptService {
         val SALT_V3 = arrayOf("812_a")
 
         @JvmStatic
+        internal val logger: MiraiLogger = MiraiLogger.Factory.create(TLV544Provider::class)
+
+        @JvmStatic
         internal external fun sign(payload: ByteArray): ByteArray
 
         init {
@@ -38,13 +41,30 @@ public class TLV544Provider : EncryptService {
             if (file.isFile.not()) {
                 this::class.java.getResource(filename)?.let { resource ->
                     file.writeBytes(resource.readBytes())
+                } ?: kotlin.run {
+                    logger.error("not found: $filename")
+                }
+            } else {
+                this::class.java.getResource("$filename.sha256")?.let { sha256 ->
+                    val hash = sha256.readText().trim()
+                    val digest = java.security.MessageDigest.getInstance("SHA256")
+                    val now = digest.digest(file.readBytes()).toUHexString("").lowercase()
+                    if (hash != now) {
+                        logger.info("update: ${file.toPath().toUri()}")
+                        this::class.java.getResource(filename)?.let { resource ->
+                            file.writeBytes(resource.readBytes())
+                        } ?: kotlin.run {
+                            logger.error("not found: $filename")
+                        }
+                    }
+                } ?: kotlin.run {
+                    logger.error("not found: $filename.sha256")
                 }
             }
+            logger.info("load: ${file.toPath().toUri()}")
             System.load(file.absolutePath)
         }
     }
-
-    private val logger: MiraiLogger = MiraiLogger.Factory.create(this::class)
 
     @Suppress("INVISIBLE_MEMBER")
     override fun encryptTlv(context: EncryptServiceContext, tlvType: Int, payload: ByteArray): ByteArray? {
