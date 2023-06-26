@@ -190,7 +190,7 @@ public object FixProtocolVersion {
                     buildTime = 1676531414L
                     ssoVersion = 19
                 }
-                impl.id < 537151363 -> impl.apply {
+                impl.id < 537155074 -> impl.apply {
                     apkId = "com.tencent.minihd.qq"
                     id = 537155074
                     ver = "8.9.50"
