@@ -50,12 +50,7 @@ public class TLV544Provider : EncryptService {
                     val digest = java.security.MessageDigest.getInstance("SHA256")
                     val now = digest.digest(file.readBytes()).toUHexString("").lowercase()
                     if (hash != now) {
-                        logger.info("update: ${file.toPath().toUri()}")
-                        this::class.java.getResource(filename)?.let { resource ->
-                            file.writeBytes(resource.readBytes())
-                        } ?: kotlin.run {
-                            logger.error("not found: $filename")
-                        }
+                        logger.warning("SHA256 not match $hash with ${file.toPath().toUri()}")
                     }
                 } ?: kotlin.run {
                     logger.error("not found: $filename.sha256")
