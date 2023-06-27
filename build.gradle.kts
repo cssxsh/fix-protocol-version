@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "xyz.cssxsh.mirai"
-version = "1.8.4"
+version = "1.8.5"
 
 mavenCentralPublish {
     useCentralS01()
@@ -92,10 +92,12 @@ tasks {
             """.trimIndent().let {
                 folder.resolve("start.cmd").writeText(it)
             }
-            """java -D"file.encoding=utf-8" -cp "./libs/*" net.mamoe.mirai.console.terminal.MiraiConsoleTerminalLoader""".let {
+            """
+                java -D"file.encoding=utf-8" -cp "./libs/*" net.mamoe.mirai.console.terminal.MiraiConsoleTerminalLoader
+            """.trimIndent().let {
                 folder.resolve("start.sh").writeText(it)
             }
-            folder.resolve("README.txt").writeText("""
+            """
                 登陆协议选 ANDROID_PAD
                 例如
                 login 123456 password ANDROID_PAD
@@ -129,7 +131,9 @@ tasks {
                 └───android_pad.json (协议版本信息)
                 
                 整合包 by https://github.com/cssxsh
-            """.trimIndent())
+            """.trimIndent().let {
+                folder.resolve("README.txt").writeText(it)
+            }
         }
     }
 }
