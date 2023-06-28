@@ -94,14 +94,15 @@ public class TLV544Provider : EncryptService, CoroutineScope {
         val error = folder.resolve("${id}.${port}.error.log")
         if (error.exists().not()) error.createNewFile()
         val script = when (System.getProperty("os.name")) {
-            "Mac OS X" -> "unidbg-fetch-qsign"
-            "Linux" -> "unidbg-fetch-qsign"
-            else -> "unidbg-fetch-qsign.bat"
+            "Mac OS X" -> folder.resolve("bin").resolve("unidbg-fetch-qsign")
+            "Linux" -> folder.resolve("bin").resolve("unidbg-fetch-qsign")
+            else -> folder.resolve("bin").resolve("unidbg-fetch-qsign.bat")
         }
+        script.setExecutable(true)
         val process = async(CoroutineName("server<${id}>")) {
             val process = runInterruptible(Dispatchers.IO) {
                 ProcessBuilder(
-                    folder.resolve("bin").resolve(script).absolutePath,
+                    script.absolutePath,
                     "--port=${port}",
                     "--count=1",
                     "--library=txlib/${ver}",
