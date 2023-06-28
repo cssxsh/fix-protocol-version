@@ -16,6 +16,7 @@ import net.mamoe.mirai.internal.utils.*
 import net.mamoe.mirai.utils.*
 import kotlin.coroutines.*
 
+@Suppress("INVISIBLE_MEMBER", "INVISIBLE_REFERENCE")
 public class TLV544Provider : EncryptService, CoroutineScope {
     internal companion object {
         val SALT_V1 = arrayOf("810_2", "810_7", "810_24", "810_25")
@@ -52,22 +53,55 @@ public class TLV544Provider : EncryptService, CoroutineScope {
         }
     }
 
-    @OptIn(MiraiInternalApi::class)
-    @Suppress("INVISIBLE_MEMBER", "INVISIBLE_REFERENCE")
+    @PublishedApi
+    internal val server: MutableMap<Long, Process> = HashMap()
+
+    @Synchronized
+    private fun server(id: Long, ver: String, uuid: String): Process {
+        val port = (id % 0xFFFF).toInt()
+        val process = server.getOrPut(id) {
+            val folder = java.io.File("./unidbg-fetch-qsign-1.0.4")
+           async(Dispatchers.IO) {
+               val process = ProcessBuilder(
+                    "${folder.absolutePath}/bin/unidbg-fetch-qsign.bat",
+                    "--port=${port}",
+                    "--count=1",
+                    "--library=${folder.absolutePath}/txlib/${ver}",
+                    "--android_id=${uuid}"
+                ).directory(folder).start()
+
+               logger.info("server: $process")
+
+               Runtime.getRuntime().addShutdownHook(Thread {
+                   process.destroy()
+               })
+               delay(3_000)
+
+               process
+            }.asCompletableFuture().get()
+        }
+        return process
+    }
+
     override fun encryptTlv(context: EncryptServiceContext, tlvType: Int, payload: ByteArray): ByteArray? {
         if (tlvType != 0x544) return null
         val command = context.extraArgs[EncryptServiceContext.KEY_COMMAND_STR]
         val protocol = context.extraArgs[EncryptServiceContext.KEY_BOT_PROTOCOL]
         val device = context.extraArgs[EncryptServiceContext.KEY_DEVICE_INFO]
+        val impl = MiraiProtocolInternal.protocols[protocol]!!
 
-        logger.info("t544 command: $command with $protocol")
+        logger.debug("t544 command: $command with $protocol")
+
+        server(id = context.id, ver = impl.ver, uuid = device.androidId.decodeToString())
+
+        val port = (context.id % 0xFFFF).toInt()
 
         val future = async(CoroutineName("encryptTlv(${context.id})")) {
-            val impl = MiraiProtocolInternal.protocols[protocol]!!
-            val json = http.get("http://127.0.0.1:8080/energy") {
-                parameter("version", impl.sdkVer)
-                parameter("uin", context.id)
-                parameter("guid", device.guid.toUHexString(""))
+            val json = http.get("http://127.0.0.1:${port}/custom_energy") {
+//                parameter("version", impl.sdkVer)
+//                parameter("uin", context.id)
+//                parameter("guid", device.guid.toUHexString(""))
+                parameter("salt", payload.toUHexString(""))
                 parameter("data", command)
             }.body<JsonObject>()
 
@@ -79,7 +113,11 @@ public class TLV544Provider : EncryptService, CoroutineScope {
     }
 
     override fun initialize(context: EncryptServiceContext) {
-        // TODO
+        val protocol = context.extraArgs[EncryptServiceContext.KEY_BOT_PROTOCOL]
+        val impl = MiraiProtocolInternal.protocols[protocol]!!
+        val device = context.extraArgs[EncryptServiceContext.KEY_DEVICE_INFO]
+
+        server(id = context.id, ver = impl.ver, uuid = device.androidId.decodeToString())
     }
 
     override fun qSecurityGetSign(
@@ -89,8 +127,13 @@ public class TLV544Provider : EncryptService, CoroutineScope {
         payload: ByteArray
     ): EncryptService.SignResult? {
         val qua = context.extraArgs[EncryptServiceContext.KEY_APP_QUA]
+
+        logger.debug("sign command: $commandName with $qua")
+
+        val port = (context.id % 0xFFFF).toInt()
+
         val future = async(CoroutineName("qSecurityGetSign(${context.id})")) {
-            val json = http.get("http://127.0.0.1:8080/sign") {
+            val json = http.get("http://127.0.0.1:$port/sign") {
                 parameter("uin", context.id)
                 parameter("qua", qua)
                 parameter("cmd", commandName)

@@ -330,6 +330,7 @@ public object FixProtocolVersion {
                     buildTime = json.getValue("build_time").jsonPrimitive.long
                     ssoVersion = json.getValue("sso_version").jsonPrimitive.int
                     appKey = json.getValue("app_key").jsonPrimitive.content
+                    qua = json.getValue("qua").jsonPrimitive.content
                 }
             }
         }
