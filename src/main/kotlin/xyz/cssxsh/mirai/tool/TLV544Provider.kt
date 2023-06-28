@@ -59,7 +59,7 @@ public class TLV544Provider : EncryptService, CoroutineScope {
     @Synchronized
     @PublishedApi
     internal fun server(id: Long, ver: String, uuid: String): Process {
-        val port = (id.toInt() % 0xFFFF).let { if (it < 5001) it + 5001 else it }
+        val port = (id % 0xFFFF).toInt().let { if (it < 10000) it + 10000 else it }
         val impl = server[id]
         if (impl?.isAlive == true) return impl
 
@@ -128,7 +128,7 @@ public class TLV544Provider : EncryptService, CoroutineScope {
 
         logger.info("t544 command: $command")
 
-        val port = (context.id.toInt() % 0xFFFF).let { if (it < 5001) it + 5001 else it }
+        val port = (context.id % 0xFFFF).toInt().let { if (it < 10000) it + 10000 else it }
 
         val future = async(CoroutineName("encryptTlv(${context.id})")) {
             val json = http.get("http://127.0.0.1:${port}/custom_energy") {
@@ -163,7 +163,7 @@ public class TLV544Provider : EncryptService, CoroutineScope {
 
         logger.info("sign command: $commandName with $qua")
 
-        val port = (context.id.toInt() % 0xFFFF).let { if (it < 5001) it + 5001 else it }
+        val port = (context.id % 0xFFFF).toInt().let { if (it < 10000) it + 10000 else it }
 
         val future = async(CoroutineName("qSecurityGetSign(${context.id})")) {
             val json = http.get("http://127.0.0.1:$port/sign") {
