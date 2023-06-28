@@ -14,6 +14,9 @@ import kotlinx.serialization.json.*
 import net.mamoe.mirai.internal.spi.*
 import net.mamoe.mirai.internal.utils.*
 import net.mamoe.mirai.utils.*
+import java.net.InetSocketAddress
+import java.net.ServerSocket
+import java.util.*
 import kotlin.coroutines.*
 
 @Suppress("INVISIBLE_MEMBER", "INVISIBLE_REFERENCE")
@@ -56,36 +59,59 @@ public class TLV544Provider : EncryptService, CoroutineScope {
 
     private val server: MutableMap<Long, Process> = HashMap()
 
+    private val ports: MutableMap<Long, Int> = HashMap()
+
     @Synchronized
     @PublishedApi
     internal fun server(id: Long, ver: String, uuid: String): Process {
-        val port = (id % 0xFFFF).toInt().let { if (it < 10000) it + 10000 else it }
         val impl = server[id]
         if (impl?.isAlive == true) return impl
 
+
+        val fail = mutableListOf<Int>()
+        val port = kotlin.run {
+            val random = Random(id)
+            for (i in (0 until 5)) {
+                val temp = random.nextInt(5001, 65535)
+                try {
+                    ServerSocket().use { socket ->
+                        socket.reuseAddress = true
+                        socket.bind(InetSocketAddress("127.0.0.1", temp))
+                    }
+                    return@run temp
+                } catch (cause: Throwable) {
+                    fail.add(temp)
+                    continue
+                }
+            }
+            throw UnsupportedOperationException("端口被占用 $fail")
+        }
+
         val folder = java.io.File("./unidbg-fetch-qsign-1.0.4")
         if (folder.exists().not()) throw NoSuchFileException(folder)
-        val log = folder.resolve("${id}.log")
+        val log = folder.resolve("${id}.${port}.log")
         if (log.exists().not()) log.createNewFile()
-        val error = folder.resolve("${id}.error.log")
+        val error = folder.resolve("${id}.${port}.error.log")
         if (error.exists().not()) error.createNewFile()
         val script = when (System.getProperty("os.name")) {
             "Mac OS X" -> "unidbg-fetch-qsign"
             "Linux" -> "unidbg-fetch-qsign"
             else -> "unidbg-fetch-qsign.bat"
         }
-        val process = async(Dispatchers.IO) {
-            val process = ProcessBuilder(
-                "${folder.absolutePath}/bin/${script}",
-                "--port=${port}",
-                "--count=1",
-                "--library=${folder.absolutePath}/txlib/${ver}",
-                "--android_id=${uuid}"
-            )
-                .directory(folder)
-                .redirectInput(log)
-                .redirectError(error)
-                .start()
+        val process = async(CoroutineName("server<${id}>")) {
+            val process = runInterruptible(Dispatchers.IO) {
+                ProcessBuilder(
+                    folder.resolve("bin").resolve(script).absolutePath,
+                    "--port=${port}",
+                    "--count=1",
+                    "--library=txlib/${ver}",
+                    "--android_id=${uuid}"
+                )
+                    .directory(folder)
+                    .redirectOutput(log)
+                    .redirectError(error)
+                    .start()
+            }
 
             logger.info("server start http://127.0.0.1:${port}")
 
@@ -103,10 +129,7 @@ public class TLV544Provider : EncryptService, CoroutineScope {
                 delay(10_000)
                 i++
                 try {
-                    http.get("http://127.0.0.1:${port}/custom_energy") {
-                        parameter("salt", "0000")
-                        parameter("data", "810_9")
-                    }.body<JsonObject>()
+                    http.get("http://127.0.0.1:${port}").body<JsonObject>()
                     break
                 } catch (cause: java.net.ConnectException) {
                     if (i > 60) throw cause
@@ -119,6 +142,7 @@ public class TLV544Provider : EncryptService, CoroutineScope {
             process
         }.asCompletableFuture().get()
         server[id] = process
+        ports[id] = port
         return process
     }
 
@@ -128,7 +152,7 @@ public class TLV544Provider : EncryptService, CoroutineScope {
 
         logger.info("t544 command: $command")
 
-        val port = (context.id % 0xFFFF).toInt().let { if (it < 10000) it + 10000 else it }
+        val port = ports[context.id]!!
 
         val future = async(CoroutineName("encryptTlv(${context.id})")) {
             val json = http.get("http://127.0.0.1:${port}/custom_energy") {
@@ -163,7 +187,7 @@ public class TLV544Provider : EncryptService, CoroutineScope {
 
         logger.info("sign command: $commandName with $qua")
 
-        val port = (context.id % 0xFFFF).toInt().let { if (it < 10000) it + 10000 else it }
+        val port = ports[context.id]!!
 
         val future = async(CoroutineName("qSecurityGetSign(${context.id})")) {
             val json = http.get("http://127.0.0.1:$port/sign") {
