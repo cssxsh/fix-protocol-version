@@ -67,8 +67,8 @@ public class TLV544Provider : EncryptService, CoroutineScope {
         if (folder.exists().not()) throw NoSuchFileException(folder)
         val log = folder.resolve("${id}.log")
         if (log.exists().not()) log.createNewFile()
-        val error = folder.resolve("${id}.log")
-        if (error.exists().not()) log.createNewFile()
+        val error = folder.resolve("${id}.error.log")
+        if (error.exists().not()) error.createNewFile()
         val script = when (System.getProperty("os.name")) {
             "Mac OS X" -> "unidbg-fetch-qsign"
             "Linux" -> "unidbg-fetch-qsign"
@@ -114,7 +114,7 @@ public class TLV544Provider : EncryptService, CoroutineScope {
                 }
             }
 
-            logger.info("server ready ${process.toHandle().children().findFirst().get()}")
+            logger.info("server ready http://127.0.0.1:${port}")
 
             process
         }.asCompletableFuture().get()
@@ -125,11 +125,8 @@ public class TLV544Provider : EncryptService, CoroutineScope {
     override fun encryptTlv(context: EncryptServiceContext, tlvType: Int, payload: ByteArray): ByteArray? {
         if (tlvType != 0x544) return null
         val command = context.extraArgs[EncryptServiceContext.KEY_COMMAND_STR]
-        val protocol = context.extraArgs[EncryptServiceContext.KEY_BOT_PROTOCOL]
-        val device = context.extraArgs[EncryptServiceContext.KEY_DEVICE_INFO]
-        val impl = MiraiProtocolInternal.protocols[protocol]!!
 
-        logger.debug("t544 command: $command with $protocol")
+        logger.info("t544 command: $command")
 
         server(id = context.id, ver = impl.ver, uuid = device.androidId.decodeToString())
 
@@ -166,7 +163,7 @@ public class TLV544Provider : EncryptService, CoroutineScope {
 
         val qua = context.extraArgs[EncryptServiceContext.KEY_APP_QUA]
 
-        logger.debug("sign command: $commandName with $qua")
+        logger.info("sign command: $commandName with $qua")
 
         val port = (context.id % 0xFFFF).toInt()
 
