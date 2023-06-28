@@ -70,7 +70,7 @@ public class TLV544Provider : EncryptService, CoroutineScope {
 
         val fail = mutableListOf<Int>()
         val port = kotlin.run {
-            val random = Random(id)
+            val random = kotlin.random.Random(id)
             for (i in (0 until 5)) {
                 val temp = random.nextInt(5001, 65535)
                 try {
