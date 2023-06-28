@@ -64,6 +64,11 @@ public class TLV544Provider : EncryptService, CoroutineScope {
         if (impl?.isAlive == true) return impl
 
         val folder = java.io.File("./unidbg-fetch-qsign-1.0.4")
+        if (folder.exists().not()) throw NoSuchFileException(folder)
+        val log = folder.resolve("${id}.log")
+        if (log.exists().not()) log.createNewFile()
+        val error = folder.resolve("${id}.log")
+        if (error.exists().not()) log.createNewFile()
         val script = when (System.getProperty("os.name")) {
             "Mac OS X" -> "unidbg-fetch-qsign"
             "Linux" -> "unidbg-fetch-qsign"
@@ -78,8 +83,8 @@ public class TLV544Provider : EncryptService, CoroutineScope {
                 "--android_id=${uuid}"
             )
                 .directory(folder)
-                .redirectInput(java.io.File("./unidbg-fetch-qsign-1.0.4/${id}.log"))
-                .redirectError(java.io.File("./unidbg-fetch-qsign-1.0.4/${id}.error.log"))
+                .redirectInput(log)
+                .redirectError(error)
                 .start()
 
             logger.info("server start $process")
