@@ -21,14 +21,23 @@ import kotlin.coroutines.*
 
 @Suppress("INVISIBLE_MEMBER", "INVISIBLE_REFERENCE")
 public class TLV544Provider : EncryptService, CoroutineScope {
-    internal companion object {
-        val SALT_V1 = arrayOf("810_2", "810_7", "810_24", "810_25")
-        val SALT_V2 = arrayOf("810_9", "810_a", "810_d", "810_f")
-        val SALT_V3 = arrayOf("812_a")
-        val CMD_WHITE_LIST = TLV544Provider::class.java.getResource("cmd.txt")!!.readText().lines()
+    public companion object {
+        internal val SALT_V1 = arrayOf("810_2", "810_7", "810_24", "810_25")
+        internal val SALT_V2 = arrayOf("810_9", "810_a", "810_d", "810_f")
+        internal val SALT_V3 = arrayOf("812_a")
+        internal val CMD_WHITE_LIST = TLV544Provider::class.java.getResource("cmd.txt")!!.readText().lines()
 
         @JvmStatic
         internal val logger: MiraiLogger = MiraiLogger.Factory.create(TLV544Provider::class)
+
+        @JvmStatic
+        public fun install() {
+            Services.register(
+                "net.mamoe.mirai.internal.spi.EncryptService",
+                "xyz.cssxsh.mirai.tool.TLV544Provider",
+                ::TLV544Provider
+            )
+        }
     }
 
     @PublishedApi
