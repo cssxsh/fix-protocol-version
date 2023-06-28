@@ -22,6 +22,7 @@ public class TLV544Provider : EncryptService, CoroutineScope {
         val SALT_V1 = arrayOf("810_2", "810_7", "810_24", "810_25")
         val SALT_V2 = arrayOf("810_9", "810_a", "810_d", "810_f")
         val SALT_V3 = arrayOf("812_a")
+        val CMD_WHITE_LIST = TLV544Provider::class.java.getResource("cmd.txt")!!.readText().lines()
 
         @JvmStatic
         internal val logger: MiraiLogger = MiraiLogger.Factory.create(TLV544Provider::class)
@@ -53,33 +54,66 @@ public class TLV544Provider : EncryptService, CoroutineScope {
         }
     }
 
-    @PublishedApi
-    internal val server: MutableMap<Long, Process> = HashMap()
+    private val server: MutableMap<Long, Process> = HashMap()
 
     @Synchronized
-    private fun server(id: Long, ver: String, uuid: String): Process {
+    @PublishedApi
+    internal fun server(id: Long, ver: String, uuid: String): Process {
         val port = (id % 0xFFFF).toInt()
-        val process = server.getOrPut(id) {
-            val folder = java.io.File("./unidbg-fetch-qsign-1.0.4")
-           async(Dispatchers.IO) {
-               val process = ProcessBuilder(
-                    "${folder.absolutePath}/bin/unidbg-fetch-qsign.bat",
-                    "--port=${port}",
-                    "--count=1",
-                    "--library=${folder.absolutePath}/txlib/${ver}",
-                    "--android_id=${uuid}"
-                ).directory(folder).start()
+        val impl = server[id]
+        if (impl?.isAlive == true) return impl
 
-               logger.info("server: $process")
-
-               Runtime.getRuntime().addShutdownHook(Thread {
-                   process.destroy()
-               })
-               delay(3_000)
-
-               process
-            }.asCompletableFuture().get()
+        val folder = java.io.File("./unidbg-fetch-qsign-1.0.4")
+        val script = when (System.getProperty("os.name")) {
+            "Mac OS X" -> "unidbg-fetch-qsign"
+            "Linux" -> "unidbg-fetch-qsign"
+            else -> "unidbg-fetch-qsign.bat"
         }
+        val process = async(Dispatchers.IO) {
+            val process = ProcessBuilder(
+                "${folder.absolutePath}/bin/${script}",
+                "--port=${port}",
+                "--count=1",
+                "--library=${folder.absolutePath}/txlib/${ver}",
+                "--android_id=${uuid}"
+            )
+                .directory(folder)
+                .redirectInput(java.io.File("./unidbg-fetch-qsign-1.0.4/${id}.log"))
+                .redirectError(java.io.File("./unidbg-fetch-qsign-1.0.4/${id}.error.log"))
+                .start()
+
+            logger.info("server start $process")
+
+            Runtime.getRuntime().addShutdownHook(Thread {
+                with(process.toHandle()) {
+                    children().forEach {
+                        it.destroy()
+                    }
+                    destroy()
+                }
+            })
+
+            var i = 0
+            while (isActive) {
+                delay(10_000)
+                i++
+                try {
+                    http.get("http://127.0.0.1:${port}/custom_energy") {
+                        parameter("salt", "0000")
+                        parameter("data", "810_9")
+                    }.body<JsonObject>()
+                    break
+                } catch (cause: java.net.ConnectException) {
+                    if (i > 60) throw cause
+                    continue
+                }
+            }
+
+            logger.info("server ready ${process.toHandle().children().findFirst().get()}")
+
+            process
+        }.asCompletableFuture().get()
+        server[id] = process
         return process
     }
 
@@ -98,9 +132,6 @@ public class TLV544Provider : EncryptService, CoroutineScope {
 
         val future = async(CoroutineName("encryptTlv(${context.id})")) {
             val json = http.get("http://127.0.0.1:${port}/custom_energy") {
-//                parameter("version", impl.sdkVer)
-//                parameter("uin", context.id)
-//                parameter("guid", device.guid.toUHexString(""))
                 parameter("salt", payload.toUHexString(""))
                 parameter("data", command)
             }.body<JsonObject>()
@@ -126,6 +157,8 @@ public class TLV544Provider : EncryptService, CoroutineScope {
         commandName: String,
         payload: ByteArray
     ): EncryptService.SignResult? {
+        if (commandName !in CMD_WHITE_LIST) return null
+
         val qua = context.extraArgs[EncryptServiceContext.KEY_APP_QUA]
 
         logger.debug("sign command: $commandName with $qua")
