@@ -126,7 +126,7 @@ public class TLV544Provider : EncryptService, CoroutineScope {
                     .start()
             }
 
-            logger.info("server start http://127.0.0.1:${port}")
+            logger.info("sign server start, log ${log.toPath().toUri()}")
 
             Runtime.getRuntime().addShutdownHook(Thread {
                 with(process.toHandle()) {
@@ -150,7 +150,7 @@ public class TLV544Provider : EncryptService, CoroutineScope {
                 }
             }
 
-            logger.info("server ready http://127.0.0.1:${port}")
+            logger.info("sign server ready, url http://127.0.0.1:${port}")
 
             process
         }.asCompletableFuture().get()
@@ -159,7 +159,7 @@ public class TLV544Provider : EncryptService, CoroutineScope {
             val re = runInterruptible(Dispatchers.IO) {
                 process.waitFor()
             }
-            logger.info("server exit(${re}) http://127.0.0.1:${port}")
+            logger.info("sign server exit(${re})")
         }
         server[id] = process
         ports[id] = port
