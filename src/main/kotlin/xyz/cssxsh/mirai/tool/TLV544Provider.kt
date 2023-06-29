@@ -25,6 +25,7 @@ public class TLV544Provider : EncryptService, CoroutineScope {
         internal val SALT_V1 = arrayOf("810_2", "810_7", "810_24", "810_25")
         internal val SALT_V2 = arrayOf("810_9", "810_a", "810_d", "810_f")
         internal val SALT_V3 = arrayOf("812_a")
+        internal val SALT_V5 = arrayOf("812_5")
         internal val CMD_WHITE_LIST = TLV544Provider::class.java.getResource("cmd.txt")!!.readText().lines()
 
         @JvmStatic
@@ -96,7 +97,7 @@ public class TLV544Provider : EncryptService, CoroutineScope {
             throw UnsupportedOperationException("端口被占用 $fail")
         }
 
-        val folder = java.io.File("./unidbg-fetch-qsign-1.0.5")
+        val folder = java.io.File("./unidbg-fetch-qsign-1.1.0")
         if (folder.exists().not()) throw NoSuchFileException(folder)
         val log = folder.resolve("${id}.${port}.log")
         if (log.exists().not()) log.createNewFile()
@@ -114,7 +115,7 @@ public class TLV544Provider : EncryptService, CoroutineScope {
                     script.absolutePath,
                     "--host=0.0.0.0",
                     "--port=${port}",
-                    "--count=1",
+                    "--count=2",
                     "--library=txlib/${ver}",
                     "--android_id=${uuid}"
                 )
@@ -137,13 +138,13 @@ public class TLV544Provider : EncryptService, CoroutineScope {
 
             var i = 0
             while (isActive) {
-                delay(10_000)
+                delay(1_000)
                 i++
                 try {
-                    http.get("http://127.0.0.1:${port}").body<JsonObject>()
+                    http.get("http://127.0.0.1:${port}/custom_energy?salt=&data=114514").body<JsonObject>()
                     break
                 } catch (cause: java.net.ConnectException) {
-                    if (i > 60) throw cause
+                    if (i > 180) throw cause
                     continue
                 }
             }
@@ -171,6 +172,7 @@ public class TLV544Provider : EncryptService, CoroutineScope {
                 parameter("data", command)
             }.body<JsonObject>()
 
+            check(json["code"]?.jsonPrimitive?.int == 0) { json.toString() }
             val data = checkNotNull(json["data"]?.jsonPrimitive?.content) { json.toString() }
 
             data.hexToBytes()
@@ -209,6 +211,7 @@ public class TLV544Provider : EncryptService, CoroutineScope {
                 parameter("buffer", payload.toUHexString(""))
             }.body<JsonObject>()
 
+            check(json["code"]?.jsonPrimitive?.int == 0) { json.toString() }
             val data = checkNotNull(json["data"]?.jsonObject) { json.toString() }
 
             EncryptService.SignResult(
