@@ -97,8 +97,9 @@ public class TLV544Provider : EncryptService, CoroutineScope {
             throw UnsupportedOperationException("端口被占用 $fail")
         }
 
-        val folder = java.io.File("./unidbg-fetch-qsign-1.1.0")
-        if (folder.exists().not()) throw NoSuchFileException(folder)
+        val folder = java.io.File("./").listFiles()
+            ?.find { it.name.startsWith("unidbg-fetch-qsign") }
+            ?: throw java.io.FileNotFoundException("unidbg-fetch-qsign")
         val log = folder.resolve("${id}.${port}.log")
         if (log.exists().not()) log.createNewFile()
         val error = folder.resolve("${id}.${port}.error.log")
@@ -153,6 +154,13 @@ public class TLV544Provider : EncryptService, CoroutineScope {
 
             process
         }.asCompletableFuture().get()
+
+        launch(CoroutineName("server<${id}>")) {
+            val re = runInterruptible(Dispatchers.IO) {
+                process.waitFor()
+            }
+            logger.info("server exit(${re}) http://127.0.0.1:${port}")
+        }
         server[id] = process
         ports[id] = port
         return process
