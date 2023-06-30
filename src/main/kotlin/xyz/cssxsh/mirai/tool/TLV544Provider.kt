@@ -25,7 +25,7 @@ public class TLV544Provider : EncryptService, CoroutineScope {
         internal val SALT_V1 = arrayOf("810_2", "810_7", "810_24", "810_25")
         internal val SALT_V2 = arrayOf("810_9", "810_a", "810_d", "810_f")
         internal val SALT_V3 = arrayOf("812_a")
-        internal val SALT_V5 = arrayOf("812_5")
+        internal val SALT_V4 = arrayOf("812_5")
         internal val CMD_WHITE_LIST = TLV544Provider::class.java.getResource("cmd.txt")!!.readText().lines()
 
         @JvmStatic
@@ -229,6 +229,11 @@ public class TLV544Provider : EncryptService, CoroutineScope {
             )
         }.asCompletableFuture()
 
-        return future.get()
+        return try {
+            future.get()
+        } catch (cause: Throwable) {
+            logger.error("qSecurityGetSign<${context.id}>", cause)
+            null
+        }
     }
 }
