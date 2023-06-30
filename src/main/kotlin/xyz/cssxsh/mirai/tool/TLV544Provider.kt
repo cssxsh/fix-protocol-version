@@ -9,10 +9,11 @@ import java.io.File
 import java.util.*
 
 public class TLV544Provider : EncryptService {
-    internal companion object {
-        val SALT_V1 = arrayOf("810_2", "810_7", "810_24", "810_25")
-        val SALT_V2 = arrayOf("810_9", "810_a", "810_d", "810_f")
-        val SALT_V3 = arrayOf("812_a")
+    public companion object {
+        internal val SALT_V1 = arrayOf("810_2", "810_7", "810_24", "810_25")
+        internal val SALT_V2 = arrayOf("810_9", "810_a", "810_d", "810_f")
+        internal val SALT_V3 = arrayOf("812_a")
+        internal val SALT_V4 = arrayOf("812_5")
 
         @JvmStatic
         internal val logger: MiraiLogger = MiraiLogger.Factory.create(TLV544Provider::class)
@@ -20,7 +21,8 @@ public class TLV544Provider : EncryptService {
         @JvmStatic
         internal external fun sign(payload: ByteArray): ByteArray
 
-        init {
+        @JvmStatic
+        public fun install() {
             val os = when (val name = System.getProperty("os.name")) {
                 "Mac OS X" -> "macos"
                 "Linux" -> if (System.getenv("TERMUX_VERSION") != null) "android" else "linux"
@@ -58,6 +60,12 @@ public class TLV544Provider : EncryptService {
             }
             logger.info("load: ${file.toPath().toUri()}")
             System.load(file.absolutePath)
+
+            Services.register(
+                "net.mamoe.mirai.internal.spi.EncryptService",
+                "xyz.cssxsh.mirai.tool.TLV544Provider",
+                ::TLV544Provider
+            )
         }
     }
 
