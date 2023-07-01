@@ -158,7 +158,7 @@ public class TLV544Provider : EncryptService, CoroutineScope {
         }.asCompletableFuture().get()
 
         launch(CoroutineName("server<${id}>")) {
-            val re = runInterruptible(Dispatchers.IO) {
+            val code = runInterruptible(Dispatchers.IO) {
                 process.waitFor()
             }
             logger.info("sign server exit(${re})")
