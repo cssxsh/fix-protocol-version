@@ -100,6 +100,8 @@ public class TLV544Provider : EncryptService, CoroutineScope {
         val folder = java.io.File("./").listFiles()
             ?.find { it.name.startsWith("unidbg-fetch-qsign") }
             ?: throw java.io.FileNotFoundException("unidbg-fetch-qsign")
+
+        logger.info("sign server folder ${folder.toPath().toUri()}")
         val log = folder.resolve("${id}.${port}.log")
         if (log.exists().not()) log.createNewFile()
         val error = folder.resolve("${id}.${port}.error.log")
@@ -126,7 +128,7 @@ public class TLV544Provider : EncryptService, CoroutineScope {
                     .start()
             }
 
-            logger.info("sign server start, log ${log.toPath().toUri()}")
+            logger.info("sign server start, process ${process}, log ${log.toPath().toUri()}")
 
             Runtime.getRuntime().addShutdownHook(Thread {
                 with(process.toHandle()) {
