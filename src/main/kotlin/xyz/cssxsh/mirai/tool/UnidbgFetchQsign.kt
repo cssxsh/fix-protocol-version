@@ -46,12 +46,12 @@ public class UnidbgFetchQsign(private val server: String, private val key: Strin
         register(uin = context.id, androidId = device.androidId.decodeToString(), guid = device.guid.toUHexString(), qimei36 = qimei36)
 
         channel0 = channel
-        launch(CoroutineName("requestToken")) {
-            delay(180_000)
-            while (isActive) {
-                requestToken(uin = context.id)
 
+        launch(CoroutineName("requestToken")) {
+            while (isActive) {
                 delay((30 .. 40).random() * 60_000L)
+
+                requestToken(uin = context.id)
             }
         }
     }
@@ -110,12 +110,13 @@ public class UnidbgFetchQsign(private val server: String, private val key: Strin
         val data = sign(uin = context.id, cmd = commandName, seq = sequenceId, buffer = payload)
 
         launch(CoroutineName("RequestCallback")) {
+            delay(10_000)
             for (callback in data.requestCallback) {
                 val result = channel.sendMessage(
                     remark = "callback.callbackId",
                     commandName = callback.cmd,
                     uin = context.id,
-                    data = callback.body.encodeToByteArray()
+                    data = callback.body.hexToBytes()
                 )
                 if (result == null) {
                     logger.debug("${callback.cmd} ChannelResult is null")
