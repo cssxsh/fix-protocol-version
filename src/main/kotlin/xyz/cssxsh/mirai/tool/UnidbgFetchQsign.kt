@@ -56,26 +56,28 @@ public class UnidbgFetchQsign(private val server: String, private val key: Strin
         }
     }
 
-    private fun register(uin: Long, androidId: String, guid: String, qimei36: String): String {
+    private fun register(uin: Long, androidId: String, guid: String, qimei36: String) {
         val response = client.prepareGet("${server}/register")
             .addQueryParam("uin", uin.toString())
             .addQueryParam("android_id", androidId)
             .addQueryParam("guid", guid)
             .addQueryParam("qimei36", qimei36)
             .addQueryParam("key", key)
-            .execute()
-        val body = Json.decodeFromString(DataWrapper.serializer(), response.get().responseBody)
+            .execute().get()
+        val body = Json.decodeFromString(DataWrapper.serializer(), response.responseBody)
         check(body.code == 0) { body.message }
 
-        return body.message
+        logger.debug("Bot(${uin}) register, ${body.message}")
     }
 
     private fun requestToken(uin: Long) {
         val response = client.prepareGet("${server}/request_token")
             .addQueryParam("uin", uin.toString())
-            .execute()
-        val body = Json.decodeFromString(DataWrapper.serializer(), response.get().responseBody)
+            .execute().get()
+        val body = Json.decodeFromString(DataWrapper.serializer(), response.responseBody)
         check(body.code == 0) { body.message }
+
+        logger.debug("Bot(${uin}) request_token, ${body.message}")
     }
 
     override fun encryptTlv(context: EncryptServiceContext, tlvType: Int, payload: ByteArray): ByteArray? {
@@ -92,9 +94,11 @@ public class UnidbgFetchQsign(private val server: String, private val key: Strin
             .addQueryParam("uin", uin.toString())
             .addQueryParam("salt", salt.toUHexString(""))
             .addQueryParam("data", data)
-            .execute()
-        val body = Json.decodeFromString(DataWrapper.serializer(), response.get().responseBody)
+            .execute().get()
+        val body = Json.decodeFromString(DataWrapper.serializer(), response.responseBody)
         check(body.code == 0) { body.message }
+
+        logger.debug("Bot(${uin}) custom_energy, ${body.message}")
 
         return Json.decodeFromJsonElement(String.serializer(), body.data)
     }
@@ -140,9 +144,11 @@ public class UnidbgFetchQsign(private val server: String, private val key: Strin
             .addFormParam("cmd", cmd)
             .addFormParam("seq", seq.toString())
             .addFormParam("buffer", buffer.toUHexString(""))
-            .execute()
-        val body = Json.decodeFromString(DataWrapper.serializer(), response.get().responseBody)
+            .execute().get()
+        val body = Json.decodeFromString(DataWrapper.serializer(), response.responseBody)
         check(body.code == 0) { body.message }
+
+        logger.debug("Bot(${uin}) sign, ${body.message}")
 
         return Json.decodeFromJsonElement(SignResult.serializer(), body.data)
     }
@@ -153,9 +159,11 @@ public class UnidbgFetchQsign(private val server: String, private val key: Strin
             .addQueryParam("cmd", cmd)
             .addQueryParam("callbackId", callbackId.toString())
             .addQueryParam("buffer", buffer.toUHexString(""))
-            .execute()
-        val body = Json.decodeFromString(DataWrapper.serializer(), response.get().responseBody)
+            .execute().get()
+        val body = Json.decodeFromString(DataWrapper.serializer(), response.responseBody)
         check(body.code == 0) { body.message }
+
+        logger.debug("Bot(${uin}) submit, ${body.message}")
     }
 
     public companion object {
