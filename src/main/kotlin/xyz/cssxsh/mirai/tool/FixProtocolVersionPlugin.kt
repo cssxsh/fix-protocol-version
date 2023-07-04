@@ -32,7 +32,7 @@ public object FixProtocolVersionPlugin : KotlinPlugin(
         }
         logger.info("注册服务...")
         try {
-            TLV544Provider.install()
+            UnidbgFetchQsign.install()
         } catch (_: NoClassDefFoundError) {
             logger.warning("注册服务失败，请在 2.15.0-dev-98 或更高版本下运行")
         } catch (cause: Throwable) {

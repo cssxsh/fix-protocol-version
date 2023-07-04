@@ -7,6 +7,8 @@ import io.ktor.client.plugins.*
 import io.ktor.client.plugins.compression.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
+import io.ktor.client.request.forms.*
+import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.future.*
@@ -20,23 +22,19 @@ import java.util.*
 import kotlin.coroutines.*
 
 @Suppress("INVISIBLE_MEMBER", "INVISIBLE_REFERENCE")
-public class TLV544Provider : EncryptService, CoroutineScope {
+public class UnidbgFetchQsign : EncryptService, CoroutineScope {
     public companion object {
-        internal val SALT_V1 = arrayOf("810_2", "810_7", "810_24", "810_25")
-        internal val SALT_V2 = arrayOf("810_9", "810_a", "810_d", "810_f")
-        internal val SALT_V3 = arrayOf("812_a")
-        internal val SALT_V4 = arrayOf("812_5")
-        internal val CMD_WHITE_LIST = TLV544Provider::class.java.getResource("cmd.txt")!!.readText().lines()
+        internal val CMD_WHITE_LIST = UnidbgFetchQsign::class.java.getResource("cmd.txt")!!.readText().lines()
 
         @JvmStatic
-        internal val logger: MiraiLogger = MiraiLogger.Factory.create(TLV544Provider::class)
+        internal val logger: MiraiLogger = MiraiLogger.Factory.create(UnidbgFetchQsign::class)
 
         @JvmStatic
         public fun install() {
             Services.register(
                 "net.mamoe.mirai.internal.spi.EncryptService",
-                "xyz.cssxsh.mirai.tool.TLV544Provider",
-                ::TLV544Provider
+                "xyz.cssxsh.mirai.tool.UnidbgFetchQsign",
+                ::UnidbgFetchQsign
             )
         }
     }
@@ -76,7 +74,6 @@ public class TLV544Provider : EncryptService, CoroutineScope {
     internal fun server(id: Long, ver: String, uuid: String): Process {
         val impl = server[id]
         if (impl?.isAlive == true) return impl
-
 
         val fail = mutableListOf<Int>()
         val port = kotlin.run {
@@ -118,7 +115,7 @@ public class TLV544Provider : EncryptService, CoroutineScope {
                     script.absolutePath,
                     "--host=0.0.0.0",
                     "--port=${port}",
-                    "--count=2",
+                    "--count=1",
                     "--library=txlib/${ver}",
                     "--android_id=${uuid}"
                 )
@@ -161,11 +158,29 @@ public class TLV544Provider : EncryptService, CoroutineScope {
             val code = runInterruptible(Dispatchers.IO) {
                 process.waitFor()
             }
-            logger.info("sign server exit(${re})")
+            if (code != 0) logger.info("sign server exit(${code}), log ${error.toPath().toUri()}")
         }
         server[id] = process
         ports[id] = port
         return process
+    }
+
+    override fun supports(protocol: BotConfiguration.MiraiProtocol): Boolean {
+        return when (protocol) {
+            BotConfiguration.MiraiProtocol.ANDROID_PHONE -> true
+            BotConfiguration.MiraiProtocol.ANDROID_PAD -> true
+            BotConfiguration.MiraiProtocol.ANDROID_WATCH -> false
+            BotConfiguration.MiraiProtocol.IPAD -> false
+            BotConfiguration.MiraiProtocol.MACOS -> false
+        }
+    }
+
+    override fun initialize(context: EncryptServiceContext) {
+        val protocol = context.extraArgs[EncryptServiceContext.KEY_BOT_PROTOCOL]
+        val impl = MiraiProtocolInternal.protocols[protocol]!!
+        val device = context.extraArgs[EncryptServiceContext.KEY_DEVICE_INFO]
+
+        server(id = context.id, ver = impl.ver, uuid = device.androidId.decodeToString())
     }
 
     override fun encryptTlv(context: EncryptServiceContext, tlvType: Int, payload: ByteArray): ByteArray? {
@@ -190,14 +205,6 @@ public class TLV544Provider : EncryptService, CoroutineScope {
         return future.get()
     }
 
-    override fun initialize(context: EncryptServiceContext) {
-        val protocol = context.extraArgs[EncryptServiceContext.KEY_BOT_PROTOCOL]
-        val impl = MiraiProtocolInternal.protocols[protocol]!!
-        val device = context.extraArgs[EncryptServiceContext.KEY_DEVICE_INFO]
-
-        server(id = context.id, ver = impl.ver, uuid = device.androidId.decodeToString())
-    }
-
     override fun qSecurityGetSign(
         context: EncryptServiceContext,
         sequenceId: Int,
@@ -206,20 +213,20 @@ public class TLV544Provider : EncryptService, CoroutineScope {
     ): EncryptService.SignResult? {
         if (commandName !in CMD_WHITE_LIST) return null
 
-        val qua = context.extraArgs[EncryptServiceContext.KEY_APP_QUA]
+//        val qua = context.extraArgs[EncryptServiceContext.KEY_APP_QUA]
 
-        logger.info("sign command: $commandName with $qua")
+//        logger.info("sign command: $commandName with $qua")
 
         val port = ports[context.id]!!
 
         val future = async(CoroutineName("qSecurityGetSign(${context.id})")) {
-            val json = http.get("http://127.0.0.1:$port/sign") {
-                parameter("uin", context.id)
-                parameter("qua", qua)
-                parameter("cmd", commandName)
-                parameter("seq", sequenceId)
-                parameter("buffer", payload.toUHexString(""))
-            }.body<JsonObject>()
+            val json = http.submitForm("http://127.0.0.1:$port/sign", Parameters.build {
+                append("uin", context.id.toString())
+//                parameter("qua", qua)
+                append("cmd", commandName)
+                append("seq", sequenceId.toString())
+                append("buffer", payload.toUHexString(""))
+            }).body<JsonObject>()
 
             check(json["code"]?.jsonPrimitive?.int == 0) { json.toString() }
             val data = checkNotNull(json["data"]?.jsonObject) { json.toString() }
