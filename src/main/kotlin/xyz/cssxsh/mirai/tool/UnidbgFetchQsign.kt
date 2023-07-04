@@ -64,7 +64,7 @@ public class UnidbgFetchQsign(private val server: String, private val key: Strin
             .addQueryParam("qimei36", qimei36)
             .addQueryParam("key", key)
             .execute()
-        val body = Json.decodeFromString(DataWrapper.serializer(String.serializer()), response.get().responseBody)
+        val body = Json.decodeFromString(DataWrapper.serializer(), response.get().responseBody)
         check(body.code == 0) { body.message }
 
         return body.message
@@ -74,7 +74,7 @@ public class UnidbgFetchQsign(private val server: String, private val key: Strin
         val response = client.prepareGet("${server}/request_token")
             .addQueryParam("uin", uin.toString())
             .execute()
-        val body = Json.decodeFromString(DataWrapper.serializer(String.serializer()), response.get().responseBody)
+        val body = Json.decodeFromString(DataWrapper.serializer(), response.get().responseBody)
         check(body.code == 0) { body.message }
     }
 
@@ -82,20 +82,21 @@ public class UnidbgFetchQsign(private val server: String, private val key: Strin
         if (tlvType != 0x544) return null
         val command = context.extraArgs[EncryptServiceContext.KEY_COMMAND_STR]
 
-        val data = customEnergy(salt = payload, data = command)
+        val data = customEnergy(uin = context.id, salt = payload, data = command)
 
         return data.hexToBytes()
     }
 
-    private fun customEnergy(salt: ByteArray, data: String): String {
-        val response = client.preparePost("${server}/custom_energy")
-            .addFormParam("salt", salt.toUHexString(""))
-            .addFormParam("data", data)
+    private fun customEnergy(uin: Long, salt: ByteArray, data: String): String {
+        val response = client.prepareGet("${server}/custom_energy")
+            .addQueryParam("uin", uin.toString())
+            .addQueryParam("salt", salt.toUHexString(""))
+            .addQueryParam("data", data)
             .execute()
-        val body = Json.decodeFromString(DataWrapper.serializer(String.serializer()), response.get().responseBody)
+        val body = Json.decodeFromString(DataWrapper.serializer(), response.get().responseBody)
         check(body.code == 0) { body.message }
 
-        return body.data
+        return Json.decodeFromJsonElement(String.serializer(), body.data)
     }
 
     override fun qSecurityGetSign(
@@ -139,20 +140,20 @@ public class UnidbgFetchQsign(private val server: String, private val key: Strin
             .addFormParam("seq", seq.toString())
             .addFormParam("buffer", buffer.toUHexString(""))
             .execute()
-        val body = Json.decodeFromString(DataWrapper.serializer(SignResult.serializer()), response.get().responseBody)
+        val body = Json.decodeFromString(DataWrapper.serializer(), response.get().responseBody)
         check(body.code == 0) { body.message }
 
-        return body.data
+        return Json.decodeFromJsonElement(SignResult.serializer(), body.data)
     }
 
     private fun submit(uin: Long, cmd: String, callbackId: Int, buffer: ByteArray) {
-        val response = client.preparePost("${server}/submit")
-            .addFormParam("uin", uin.toString())
-            .addFormParam("cmd", cmd)
-            .addFormParam("callbackId", callbackId.toString())
-            .addFormParam("buffer", buffer.toUHexString(""))
+        val response = client.prepareGet("${server}/submit")
+            .addQueryParam("uin", uin.toString())
+            .addQueryParam("cmd", cmd)
+            .addQueryParam("callbackId", callbackId.toString())
+            .addQueryParam("buffer", buffer.toUHexString(""))
             .execute()
-        val body = Json.decodeFromString(DataWrapper.serializer(String.serializer()), response.get().responseBody)
+        val body = Json.decodeFromString(DataWrapper.serializer(), response.get().responseBody)
         check(body.code == 0) { body.message }
     }
 
@@ -166,13 +167,13 @@ public class UnidbgFetchQsign(private val server: String, private val key: Strin
 }
 
 @Serializable
-private data class DataWrapper<T>(
+private data class DataWrapper(
     @SerialName("code")
     val code: Int = 0,
     @SerialName("msg")
     val message: String = "",
     @SerialName("data")
-    val data: T
+    val data: JsonElement
 )
 
 @Serializable
