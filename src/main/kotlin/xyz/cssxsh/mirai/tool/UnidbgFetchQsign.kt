@@ -38,6 +38,8 @@ public class UnidbgFetchQsign(private val server: String, private val key: Strin
 
     private val channel: EncryptService.ChannelProxy get() = channel0 ?: throw IllegalStateException("need initialize")
 
+    private val token = java.util.concurrent.atomic.AtomicBoolean(false)
+
     override fun initialize(context: EncryptServiceContext) {
         val device = context.extraArgs[EncryptServiceContext.KEY_DEVICE_INFO]
         val qimei36 = context.extraArgs[EncryptServiceContext.KEY_QIMEI36]
@@ -46,14 +48,6 @@ public class UnidbgFetchQsign(private val server: String, private val key: Strin
         register(uin = context.id, androidId = device.androidId.decodeToString(), guid = device.guid.toUHexString(), qimei36 = qimei36)
 
         channel0 = channel
-
-        launch(CoroutineName("requestToken")) {
-            while (isActive) {
-                delay((30 .. 40).random() * 60_000L)
-
-                requestToken(uin = context.id)
-            }
-        }
     }
 
     private fun register(uin: Long, androidId: String, guid: String, qimei36: String) {
@@ -98,7 +92,7 @@ public class UnidbgFetchQsign(private val server: String, private val key: Strin
         val body = Json.decodeFromString(DataWrapper.serializer(), response.responseBody)
         check(body.code == 0) { body.message }
 
-        logger.debug("Bot(${uin}) custom_energy, ${body.message}")
+        logger.debug("Bot(${uin}) custom_energy ${data}, ${body.message}")
 
         return Json.decodeFromJsonElement(String.serializer(), body.data)
     }
@@ -109,15 +103,28 @@ public class UnidbgFetchQsign(private val server: String, private val key: Strin
         commandName: String,
         payload: ByteArray
     ): EncryptService.SignResult? {
+        if (commandName == "StatSvc.register") {
+            if (!token.get() && token.compareAndSet(false, true)) {
+                launch(CoroutineName("RequestToken")) {
+                    requestToken(uin = context.id)
+                    while (isActive) {
+                        delay((30 .. 40).random() * 60_000L)
+
+                        requestToken(uin = context.id)
+                    }
+                }
+            }
+        }
+
         if (commandName !in CMD_WHITE_LIST) return null
 
         val data = sign(uin = context.id, cmd = commandName, seq = sequenceId, buffer = payload)
 
-        launch(CoroutineName("RequestCallback")) {
-            delay(10_000)
+        launch(CoroutineName("SendMessage")) {
             for (callback in data.requestCallback) {
+                logger.verbose("Bot(${context.id}) sendMessage ${callback.cmd} ")
                 val result = channel.sendMessage(
-                    remark = "callback.callbackId",
+                    remark = "mobileqq.msf.security",
                     commandName = callback.cmd,
                     uin = context.id,
                     data = callback.body.hexToBytes()
@@ -148,7 +155,7 @@ public class UnidbgFetchQsign(private val server: String, private val key: Strin
         val body = Json.decodeFromString(DataWrapper.serializer(), response.responseBody)
         check(body.code == 0) { body.message }
 
-        logger.debug("Bot(${uin}) sign, ${body.message}")
+        logger.debug("Bot(${uin}) sign ${cmd}, ${body.message}")
 
         return Json.decodeFromJsonElement(SignResult.serializer(), body.data)
     }
@@ -163,7 +170,7 @@ public class UnidbgFetchQsign(private val server: String, private val key: Strin
         val body = Json.decodeFromString(DataWrapper.serializer(), response.responseBody)
         check(body.code == 0) { body.message }
 
-        logger.debug("Bot(${uin}) submit, ${body.message}")
+        logger.debug("Bot(${uin}) submit ${cmd}, ${body.message}")
     }
 
     public companion object {
