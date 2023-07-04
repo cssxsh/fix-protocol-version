@@ -1,5 +1,6 @@
 package xyz.cssxsh.mirai.tool
 
+import kotlinx.coroutines.*
 import kotlinx.serialization.json.*
 import net.mamoe.mirai.*
 import net.mamoe.mirai.internal.spi.*
@@ -90,5 +91,18 @@ public class TLV544Provider : EncryptService {
                 sign(payload)
             }
         }
+    }
+
+    override fun initialize(context: EncryptServiceContext) {
+        // ...
+    }
+
+    override fun qSecurityGetSign(
+        context: EncryptServiceContext,
+        sequenceId: Int,
+        commandName: String,
+        payload: ByteArray
+    ): EncryptService.SignResult? {
+        return null
     }
 }
