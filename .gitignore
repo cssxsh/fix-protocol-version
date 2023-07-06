@@ -130,4 +130,4 @@ src/test/kotlin/RunTerminal.kt
 # Local Test Launch Point working directory
 /debug-sandbox
 
-src/main/resources/xyz/cssxsh/mirai/tool/*
+src/main/resources/xyz/cssxsh/mirai/tool/*t544*
