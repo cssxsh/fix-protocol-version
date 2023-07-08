@@ -66,20 +66,30 @@ public class ViVo50(
 
     private var cmd: List<String> = emptyList()
 
-    private val packet: MutableMap<String, CompletableFuture<JsonElement>> = ConcurrentHashMap()
+    private val packet: MutableMap<String, CompletableFuture<JsonObject>> = ConcurrentHashMap()
 
     private fun <T> ListenableFuture<Response>.getBody(deserializer: DeserializationStrategy<T>): T {
         val response = get()
         return Json.decodeFromString(deserializer, response.responseBody)
     }
 
-    private fun sendPacket(type: String, id: String, block: JsonObjectBuilder.() -> Unit) {
+    private fun sendPacket(type: String, id: String = "", block: JsonObjectBuilder.() -> Unit): JsonObject {
+
+        val uuid = id.ifEmpty { UUID.randomUUID().toString() }
+        val future = CompletableFuture<JsonObject>()
+        packet[uuid] = future
+
         val packet = buildJsonObject {
-            put("packetId", id)
+            put("packetId", uuid)
             put("packetType", type)
             block.invoke(this)
         }
-        websocket.sendTextFrame(Json.encodeToString(JsonElement.serializer(), packet))
+        val text = Json.encodeToString(JsonElement.serializer(), packet)
+        val cipher = Cipher.getInstance("AES/ECB/PKCS5Padding")
+        cipher.init(Cipher.ENCRYPT_MODE, sharedKey)
+        websocket.sendBinaryFrame(cipher.doFinal(text.encodeToByteArray()))
+
+        return future.get(60, TimeUnit.SECONDS)
     }
 
     override fun initialize(context: EncryptServiceContext) {
@@ -89,7 +99,7 @@ public class ViVo50(
 
         handshake(uin = context.id)
         openSession(token = token)
-        sendPacket(type = "rpc.initialize", id = "") {
+        sendPacket(type = "rpc.initialize", id = "rpc.initialize") {
             putJsonObject("extArgs") {
                 put("KEY_QIMEI36", qimei36)
                 putJsonObject("BOT_PROTOCOL") {
@@ -97,11 +107,48 @@ public class ViVo50(
                         put("ver", "8.9.58")
                     }
                 }
-                put("device", Json.parseToJsonElement(DeviceInfo.serializeToString(device)))
+            }
+            putJsonObject("device") {
+                put("display", device.display.toUHexString(""))
+                put("product", device.product.toUHexString(""))
+                put("device", device.device.toUHexString(""))
+                put("board", device.board.toUHexString(""))
+                put("brand", device.brand.toUHexString(""))
+                put("model", device.model.toUHexString(""))
+                put("bootloader", device.bootloader.toUHexString(""))
+                put("fingerprint", device.fingerprint.toUHexString(""))
+                put("bootId", device.bootId.toUHexString(""))
+                put("procVersion", device.procVersion.toUHexString(""))
+                put("baseBand", device.baseBand.toUHexString(""))
+                putJsonObject("version") {
+                    put("incremental", device.version.incremental.toUHexString(""))
+                    put("release", device.version.release.toUHexString(""))
+                    put("codename", device.version.codename.toUHexString(""))
+                    put("sdk", device.version.sdk)
+                }
+                put("simInfo", device.simInfo.toUHexString(""))
+                put("osType", device.osType.toUHexString(""))
+                put("macAddress", device.macAddress.toUHexString(""))
+                put("wifiBSSID", device.wifiBSSID.toUHexString(""))
+                put("wifiSSID", device.wifiSSID.toUHexString(""))
+                put("imsiMd5", device.imsiMd5.toUHexString(""))
+                put("imei", device.imei)
+                put("apn", device.apn.toUHexString(""))
+                put("androidId", device.androidId.toUHexString(""))
+                @OptIn(MiraiInternalApi::class)
+                put("guid", device.guid.toUHexString(""))
+            }
+        }.apply {
+            get("message")?.jsonPrimitive?.content?.let {
+                throw IllegalStateException(it)
             }
         }
-        sendPacket(type = "rpc.get_cmd_white_list", id = "initialize") {
+        sendPacket(type = "rpc.get_cmd_white_list", id = "rpc.get_cmd_white_list") {
             // ...
+        }.apply {
+            get("message")?.jsonPrimitive?.content?.let {
+                throw IllegalStateException(it)
+            }
         }
     }
 
@@ -110,21 +157,17 @@ public class ViVo50(
             .execute().getBody(HandshakeConfig.serializer())
 
         val pKeyRsaSha1 = (serverIdentityKey + config.publicKey)
-            .toByteArray().sha1().toUHexString("")
+            .toByteArray().sha1().toUHexString("").lowercase()
         val clientKeySignature = (pKeyRsaSha1 + serverIdentityKey)
-            .toByteArray().sha1().toUHexString("")
+            .toByteArray().sha1().toUHexString("").lowercase()
 
         check(clientKeySignature == config.keySignature) {
             "client calculated key signature doesn't match the server provides."
         }
 
-        val rsaKeyPair = KeyPairGenerator.getInstance("RSA")
-            .apply { initialize(2048) }
-            .generateKeyPair()
-
         val secret = buildJsonObject {
             put("authorizationKey", authorizationKey)
-            put("sharedKey", sharedKey.encoded.toUHexString(""))
+            put("sharedKey", sharedKey.encoded.decodeToString())
             put("botid", uin)
         }.let {
             val text = Json.encodeToString(JsonElement.serializer(), it)
@@ -139,40 +182,47 @@ public class ViVo50(
 
         val result = client.preparePost("${server}/service/rpc/handshake/handshake")
             .setBody(Json.encodeToString(JsonElement.serializer(), buildJsonObject {
-                put("clientRsa", rsaKeyPair.public.encoded.toUHexString(""))
-                put("secret", secret.toUHexString(""))
+                put("clientRsa", Base64.getEncoder().encodeToString(rsaKeyPair.public.encoded))
+                put("secret", Base64.getEncoder().encodeToString(secret))
             }))
             .execute().getBody(HandshakeResult.serializer())
 
         check(result.status == 200) { result.reason }
 
-        token = result.token
+        token = Base64.getDecoder().decode(result.token).decodeToString()
     }
 
     private fun openSession(token: String) {
         val listener = object : WebSocketListener {
             override fun onOpen(websocket: WebSocket) {
-                // TODO("Not yet implemented")
+                // ...
             }
 
             override fun onClose(websocket: WebSocket, code: Int, reason: String?) {
-                // TODO("Not yet implemented")
+                logger.error(reason)
             }
 
             override fun onError(cause: Throwable) {
-                // TODO("Not yet implemented")
+                logger.error(cause)
             }
 
-            override fun onTextFrame(payload: String, finalFragment: Boolean, rsv: Int) {
-                val json = Json.parseToJsonElement(payload).jsonObject
+            override fun onBinaryFrame(payload: ByteArray, finalFragment: Boolean, rsv: Int) {
+                val cipher = Cipher.getInstance("AES/ECB/PKCS5Padding")
+                cipher.init(Cipher.DECRYPT_MODE, sharedKey)
+                val text = cipher.doFinal(payload).decodeToString()
+
+                val json = Json.parseToJsonElement(text).jsonObject
                 when (json["packetType"]?.jsonPrimitive?.content) {
                     "rpc.service.send" -> {
                         val id = json["packetId"]!!.jsonPrimitive.content
                         val uin = json["botUin"]!!.jsonPrimitive.long
+                        val cmd = json["command"]!!.jsonPrimitive.content
                         launch(CoroutineName(id)) {
+                            logger.info("Bot(${uin}) sendMessage <- $cmd")
+
                             val result = channel.sendMessage(
                                 remark = json["remark"]!!.jsonPrimitive.content,
-                                commandName = json["command"]!!.jsonPrimitive.content,
+                                commandName = cmd,
                                 uin = uin,
                                 data = json["data"]!!.jsonPrimitive.content.hexToBytes()
                             )
@@ -181,7 +231,7 @@ public class ViVo50(
                                 logger.debug("Bot(${uin}) ChannelResult is null")
                                 return@launch
                             }
-                            logger.debug("Bot(${uin}) sendMessage -> ${result.cmd}")
+                            logger.info("Bot(${uin}) sendMessage -> ${result.cmd}")
 
                             sendPacket(type = "rpc.service.send", id = id) {
                                 put("command", result.cmd)
@@ -189,18 +239,10 @@ public class ViVo50(
                             }
                         }
                     }
-                    "rpc.sign", "rpc.tlv" -> {
-                        val id = json["packetId"]!!.jsonPrimitive.content
-                        val response = json["response"]!!
-                        val future = packet[id]!!
-                        future.complete(response)
-                    }
-                    "rpc.get_cmd_white_list" -> {
-                        cmd= Json.decodeFromJsonElement(ListSerializer(String.serializer()), json["response"]!!)
-                    }
-                    "rpc.initialize" -> Unit
                     else -> {
-                        logger.error(payload)
+                        val id = json["packetId"]!!.jsonPrimitive.content
+                        val future = packet[id]!!
+                        future.complete(json)
                     }
                 }
             }
@@ -210,11 +252,11 @@ public class ViVo50(
             .addHeader("Authorization", token)
             .addHeader("X-SEC-Time", current.toString())
             .addHeader("X-SEC-Signature", current.toString().let {
-                val cipher = Cipher.getInstance("SHA256withRSA")
-                cipher.init(Cipher.ENCRYPT_MODE, rsaKeyPair.private)
+                val privateSignature = Signature.getInstance("SHA256withRSA")
+                privateSignature.initSign(rsaKeyPair.private)
+                privateSignature.update(it.encodeToByteArray())
 
-                val bytes = cipher.doFinal(it.encodeToByteArray())
-                Base64.getEncoder().encodeToString(bytes)
+                Base64.getEncoder().encodeToString(privateSignature.sign())
             })
             .execute(
                 WebSocketUpgradeHandler
@@ -222,31 +264,22 @@ public class ViVo50(
                     .addWebSocketListener(listener)
                     .build()
             )
-            .get()
+            .get() ?: throw IllegalStateException("...")
     }
 
     override fun encryptTlv(context: EncryptServiceContext, tlvType: Int, payload: ByteArray): ByteArray? {
         val command = context.extraArgs[EncryptServiceContext.KEY_COMMAND_STR]
-        val id = UUID.randomUUID().toString()
-        val future = CompletableFuture<JsonElement>()
-        packet[id] = future
 
-        sendPacket(type = "rpc.tlv", id = id) {
+        val result = sendPacket(type = "rpc.tlv") {
             put("tlvType", tlvType)
             putJsonObject("extArgs") {
-                put("command", command)
+                put("KEY_COMMAND_STR", command)
             }
             put("content", payload.toUHexString(""))
         }
+        val hex = result["response"]?.jsonPrimitive?.content ?: return null
 
-        val response = try {
-            future.get(60, TimeUnit.SECONDS)
-        } catch (cause: Throwable) {
-            logger.error(cause)
-            return null
-        }
-
-        return response.jsonPrimitive.content.hexToBytes()
+        return hex.hexToBytes()
     }
 
     override fun qSecurityGetSign(
@@ -257,11 +290,7 @@ public class ViVo50(
     ): EncryptService.SignResult? {
         if (commandName !in cmd) return null
 
-        val id = UUID.randomUUID().toString()
-        val future = CompletableFuture<JsonElement>()
-        packet[id] = future
-
-        sendPacket(type = "rpc.sign", id = id) {
+        val result = sendPacket(type = "rpc.sign") {
             put("seqId", sequenceId)
             put("command", commandName)
             putJsonObject("extArgs") {
@@ -270,12 +299,7 @@ public class ViVo50(
             put("content", payload.toUHexString(""))
         }
 
-        val response = try {
-            future.get(60, TimeUnit.SECONDS).jsonObject
-        } catch (cause: Throwable) {
-            logger.error(cause)
-            return null
-        }
+        val response = result["response"]?.jsonObject ?: return null
 
         return EncryptService.SignResult(
             sign = response["sign"]!!.jsonPrimitive.content.hexToBytes(),
