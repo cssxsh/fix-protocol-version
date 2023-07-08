@@ -30,25 +30,42 @@ public class KFCFactory : EncryptService.Factory {
 
                 val server = with(java.io.File("KFCFactory.json")) {
                     if (exists().not()) {
-                        writeText("""
+                        writeText(
+                            """
                             {
                                 "0.0.0": {
-                                    "base_url": "http://127.0.0.1:114514",
-                                    "key": "..."
+                                    "base_url": "http://127.0.0.1:8080",
+                                    "key": "114514"
+                                }
+                                "0.1.0": {
+                                    "base_url": "http://127.0.0.1:8888",
+                                    "serverIdentityKey": "vivo50",
+                                    "authorizationKey": "kfc"
                                 }
                             }
-                        """.trimIndent())
+                        """.trimIndent()
+                        )
                     }
                     val serializer = MapSerializer(String.serializer(), ServerConfig.serializer())
                     val servers = Json.decodeFromString(serializer, readText())
-                    servers[impl.ver] ?: throw NoSuchElementException("没有找到对应 ${impl.ver} 的服务配置，${toPath().toUri()}")
+                    servers[impl.ver]
+                        ?: throw NoSuchElementException("没有找到对应 ${impl.ver} 的服务配置，${toPath().toUri()}")
                 }
 
-                UnidbgFetchQsign(
-                    server = server.base,
-                    key = server.key,
-                    coroutineContext = serviceSubScope.coroutineContext
-                )
+                when (val type = server.type.ifEmpty { if (server.key.isNotEmpty()) "unidbg-fetch-qsign" else "magic-signer-guide" }) {
+                    "unidbg-fetch-qsign" -> UnidbgFetchQsign(
+                        server = server.base,
+                        key = server.key,
+                        coroutineContext = serviceSubScope.coroutineContext
+                    )
+                    "magic-signer-guide" -> ViVo50(
+                        server = server.base,
+                        serverIdentityKey = server.serverIdentityKey,
+                        authorizationKey = server.authorizationKey,
+                        coroutineContext = serviceSubScope.coroutineContext
+                    )
+                    else -> throw UnsupportedOperationException(type)
+                }
             }
             BotConfiguration.MiraiProtocol.ANDROID_WATCH -> throw UnsupportedOperationException(protocol.name)
             BotConfiguration.MiraiProtocol.IPAD -> TLV544Provider()
@@ -61,6 +78,12 @@ public class KFCFactory : EncryptService.Factory {
 private data class ServerConfig(
     @SerialName("base_url")
     val base: String,
+    @SerialName("type")
+    val type: String = "",
     @SerialName("key")
-    val key: String
+    val key: String = "",
+    @SerialName("serverIdentityKey")
+    val serverIdentityKey: String = "",
+    @SerialName("authorizationKey")
+    val authorizationKey: String = ""
 )
