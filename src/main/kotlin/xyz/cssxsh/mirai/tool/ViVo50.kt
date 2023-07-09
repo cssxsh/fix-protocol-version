@@ -198,7 +198,7 @@ public class ViVo50(
                 put("clientRsa", Base64.getEncoder().encodeToString(rsaKeyPair.public.encoded))
                 put("secret", Base64.getEncoder().encodeToString(secret))
             }))
-            .execute().getBody(RpcResult.serializer())
+            .execute().getBody(HandshakeResult.serializer())
 
         check(result.status == 200) { result.reason }
 
@@ -285,7 +285,7 @@ public class ViVo50(
 
     private fun checkSession(token: String) {
         val current = System.currentTimeMillis()
-        val result = client.prepareGet("${server}/service/rpc/session/check")
+        val response = client.prepareGet("${server}/service/rpc/session/check")
             .addHeader("Authorization", token)
             .addHeader("X-SEC-Time", current.toString())
             .addHeader("X-SEC-Signature", current.toString().let {
@@ -295,14 +295,14 @@ public class ViVo50(
 
                 Base64.getEncoder().encodeToString(privateSignature.sign())
             })
-            .execute().getBody(RpcResult.serializer())
+            .execute().get()
 
-        check(result.status < 400) { result.reason }
+        check(response.statusCode < 400) { response.responseBody }
     }
 
     private fun deleteSession(token: String) {
         val current = System.currentTimeMillis()
-        val result = client.prepareDelete("${server}/service/rpc/session")
+        val response = client.prepareDelete("${server}/service/rpc/session")
             .addHeader("Authorization", token)
             .addHeader("X-SEC-Time", current.toString())
             .addHeader("X-SEC-Signature", current.toString().let {
@@ -312,9 +312,9 @@ public class ViVo50(
 
                 Base64.getEncoder().encodeToString(privateSignature.sign())
             })
-            .execute().getBody(RpcResult.serializer())
+            .execute().get()
 
-        check(result.status < 400) { result.reason }
+        check(response.statusCode < 400) { response.responseBody }
     }
 
     override fun encryptTlv(context: EncryptServiceContext, tlvType: Int, payload: ByteArray): ByteArray? {
@@ -369,7 +369,7 @@ private data class HandshakeConfig(
 )
 
 @Serializable
-private data class RpcResult(
+private data class HandshakeResult(
     @SerialName("status")
     val status: Int,
     @SerialName("reason")
