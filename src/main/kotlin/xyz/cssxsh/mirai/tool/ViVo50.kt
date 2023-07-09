@@ -279,17 +279,11 @@ public class ViVo50(
                 }
             }
         }
-        val current = System.currentTimeMillis()
+        val (timestamp, signature) = signature()
         websocket = client.prepareGet("${server}/service/rpc/session".replace("http", "ws"))
             .addHeader("Authorization", token)
-            .addHeader("X-SEC-Time", current.toString())
-            .addHeader("X-SEC-Signature", current.toString().let {
-                val privateSignature = Signature.getInstance("SHA256withRSA")
-                privateSignature.initSign(rsaKeyPair.private)
-                privateSignature.update(it.encodeToByteArray())
-
-                Base64.getEncoder().encodeToString(privateSignature.sign())
-            })
+            .addHeader("X-SEC-Time", timestamp)
+            .addHeader("X-SEC-Signature", signature)
             .execute(
                 WebSocketUpgradeHandler
                     .Builder()
@@ -300,37 +294,34 @@ public class ViVo50(
     }
 
     private fun checkSession(token: String) {
-        val current = System.currentTimeMillis()
+        val (timestamp, signature) = signature()
         val response = client.prepareGet("${server}/service/rpc/session/check")
             .addHeader("Authorization", token)
-            .addHeader("X-SEC-Time", current.toString())
-            .addHeader("X-SEC-Signature", current.toString().let {
-                val privateSignature = Signature.getInstance("SHA256withRSA")
-                privateSignature.initSign(rsaKeyPair.private)
-                privateSignature.update(it.encodeToByteArray())
-
-                Base64.getEncoder().encodeToString(privateSignature.sign())
-            })
+            .addHeader("X-SEC-Time", timestamp)
+            .addHeader("X-SEC-Signature", signature)
             .execute().get()
 
         check(response.statusCode < 400) { response.responseBody }
     }
 
     private fun deleteSession(token: String) {
-        val current = System.currentTimeMillis()
+        val (timestamp, signature) = signature()
         val response = client.prepareDelete("${server}/service/rpc/session")
             .addHeader("Authorization", token)
-            .addHeader("X-SEC-Time", current.toString())
-            .addHeader("X-SEC-Signature", current.toString().let {
-                val privateSignature = Signature.getInstance("SHA256withRSA")
-                privateSignature.initSign(rsaKeyPair.private)
-                privateSignature.update(it.encodeToByteArray())
-
-                Base64.getEncoder().encodeToString(privateSignature.sign())
-            })
+            .addHeader("X-SEC-Time", timestamp)
+            .addHeader("X-SEC-Signature", signature)
             .execute().get()
 
         check(response.statusCode < 400) { response.responseBody }
+    }
+
+    private fun signature(): Pair<String, String> {
+        val current = System.currentTimeMillis().toString()
+        val privateSignature = Signature.getInstance("SHA256withRSA")
+        privateSignature.initSign(rsaKeyPair.private)
+        privateSignature.update(current.encodeToByteArray())
+
+        return current to Base64.getEncoder().encodeToString(privateSignature.sign())
     }
 
     override fun encryptTlv(context: EncryptServiceContext, tlvType: Int, payload: ByteArray): ByteArray? {
