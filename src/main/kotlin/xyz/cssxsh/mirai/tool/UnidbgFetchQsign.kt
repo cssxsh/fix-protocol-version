@@ -126,7 +126,7 @@ public class UnidbgFetchQsign(private val server: String, private val key: Strin
                 val result = channel.sendMessage(
                     remark = "mobileqq.msf.security",
                     commandName = callback.cmd,
-                    uin = context.id,
+                    uin = 0,
                     data = callback.body.hexToBytes()
                 )
                 if (result == null) {
@@ -209,9 +209,9 @@ private data class SignResult(
 @Serializable
 private data class RequestCallback(
     @SerialName("body")
-    val body: String = "",
-    @SerialName("callbackId")
-    val id: Int = 0,
+    val body: String,
+    @SerialName("callback_id")
+    val id: Int,
     @SerialName("cmd")
-    val cmd: String = ""
+    val cmd: String
 )
