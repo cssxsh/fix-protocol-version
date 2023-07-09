@@ -58,8 +58,6 @@ public class ViVo50(
         .apply { initialize(2048) }
         .generateKeyPair()
 
-    private lateinit var token: String
-
     private lateinit var websocket: NettyWebSocket
 
     private lateinit var channel: EncryptService.ChannelProxy
@@ -116,7 +114,7 @@ public class ViVo50(
 
         logger.info("Bot(${context.id}) initialize by $server")
 
-        handshake(uin = context.id)
+        val token = handshake(uin = context.id)
         openSession(token = token, bot = context.id)
         coroutineContext[Job]?.invokeOnCompletion {
             try {
@@ -180,7 +178,7 @@ public class ViVo50(
         logger.info("Bot(${context.id}) initialize complete")
     }
 
-    private fun handshake(uin: Long) {
+    private fun handshake(uin: Long): String {
         val config = client.prepareGet("${server}/service/rpc/handshake/config")
             .execute().getBody(HandshakeConfig.serializer())
 
@@ -217,7 +215,7 @@ public class ViVo50(
 
         check(result.status == 200) { result.reason }
 
-        token = Base64.getDecoder().decode(result.token).decodeToString()
+        return Base64.getDecoder().decode(result.token).decodeToString()
     }
 
     private fun openSession(token: String, bot: Long) {
