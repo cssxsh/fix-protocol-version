@@ -219,6 +219,8 @@ private data class RequestCallback(
     @SerialName("body")
     val body: String,
     @SerialName("callback_id")
+    @OptIn(ExperimentalSerializationApi::class)
+    @JsonNames("callbackId", "callback_id")
     val id: Int,
     @SerialName("cmd")
     val cmd: String
