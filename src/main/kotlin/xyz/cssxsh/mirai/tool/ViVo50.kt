@@ -116,6 +116,7 @@ public class ViVo50(
 
         handshake(uin = context.id)
         openSession(token = token, bot = context.id)
+        coroutineContext[Job]?.invokeOnCompletion { deleteSession(token = token) }
         sendCommand(type = "rpc.initialize", deserializer = JsonElement.serializer()) {
             putJsonObject("extArgs") {
                 put("KEY_QIMEI36", qimei36)
@@ -197,7 +198,7 @@ public class ViVo50(
                 put("clientRsa", Base64.getEncoder().encodeToString(rsaKeyPair.public.encoded))
                 put("secret", Base64.getEncoder().encodeToString(secret))
             }))
-            .execute().getBody(HandshakeResult.serializer())
+            .execute().getBody(RpcResult.serializer())
 
         check(result.status == 200) { result.reason }
 
@@ -282,6 +283,40 @@ public class ViVo50(
             .get() ?: throw IllegalStateException("...")
     }
 
+    private fun checkSession(token: String) {
+        val current = System.currentTimeMillis()
+        val result = client.prepareGet("${server}/service/rpc/session/check")
+            .addHeader("Authorization", token)
+            .addHeader("X-SEC-Time", current.toString())
+            .addHeader("X-SEC-Signature", current.toString().let {
+                val privateSignature = Signature.getInstance("SHA256withRSA")
+                privateSignature.initSign(rsaKeyPair.private)
+                privateSignature.update(it.encodeToByteArray())
+
+                Base64.getEncoder().encodeToString(privateSignature.sign())
+            })
+            .execute().getBody(RpcResult.serializer())
+
+        check(result.status < 400) { result.reason }
+    }
+
+    private fun deleteSession(token: String) {
+        val current = System.currentTimeMillis()
+        val result = client.prepareDelete("${server}/service/rpc/session")
+            .addHeader("Authorization", token)
+            .addHeader("X-SEC-Time", current.toString())
+            .addHeader("X-SEC-Signature", current.toString().let {
+                val privateSignature = Signature.getInstance("SHA256withRSA")
+                privateSignature.initSign(rsaKeyPair.private)
+                privateSignature.update(it.encodeToByteArray())
+
+                Base64.getEncoder().encodeToString(privateSignature.sign())
+            })
+            .execute().getBody(RpcResult.serializer())
+
+        check(result.status < 400) { result.reason }
+    }
+
     override fun encryptTlv(context: EncryptServiceContext, tlvType: Int, payload: ByteArray): ByteArray? {
         val command = context.extraArgs[EncryptServiceContext.KEY_COMMAND_STR]
 
@@ -334,7 +369,7 @@ private data class HandshakeConfig(
 )
 
 @Serializable
-private data class HandshakeResult(
+private data class RpcResult(
     @SerialName("status")
     val status: Int,
     @SerialName("reason")
