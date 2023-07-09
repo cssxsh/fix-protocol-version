@@ -45,6 +45,8 @@ public class UnidbgFetchQsign(private val server: String, private val key: Strin
         val qimei36 = context.extraArgs[EncryptServiceContext.KEY_QIMEI36]
         val channel = context.extraArgs[EncryptServiceContext.KEY_CHANNEL_PROXY]
 
+        logger.info("Bot(${context.id}) initialize by $server")
+
         register(
             uin = context.id,
             androidId = device.androidId.decodeToString(),
@@ -53,6 +55,8 @@ public class UnidbgFetchQsign(private val server: String, private val key: Strin
         )
 
         channel0 = channel
+
+        logger.info("Bot(${context.id}) initialize complete")
     }
 
     private fun register(uin: Long, androidId: String, guid: String, qimei36: String) {
