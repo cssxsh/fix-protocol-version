@@ -18,6 +18,23 @@ public class KFCFactory : EncryptService.Factory {
                 ::KFCFactory
             )
         }
+
+        @JvmStatic
+        public val DEFAULT_CONFIG: String = """
+            {
+                "0.0.0": {
+                    "base_url": "http://127.0.0.1:8080",
+                    "type": "fuqiuluo/unidbg-fetch-qsign",
+                    "key": "114514"
+                },
+                "0.1.0": {
+                    "base_url": "http://127.0.0.1:8888",
+                    "type": "kiliokuara/magic-signer-guide",
+                    "serverIdentityKey": "vivo50",
+                    "authorizationKey": "kfc"
+                }
+            }
+        """.trimIndent()
     }
 
     @Suppress("INVISIBLE_MEMBER")
@@ -33,21 +50,7 @@ public class KFCFactory : EncryptService.Factory {
 
                 val server = with(java.io.File("KFCFactory.json")) {
                     if (exists().not()) {
-                        writeText(
-                            """
-                            {
-                                "0.0.0": {
-                                    "base_url": "http://127.0.0.1:8080",
-                                    "key": "114514"
-                                }
-                                "0.1.0": {
-                                    "base_url": "http://127.0.0.1:8888",
-                                    "serverIdentityKey": "vivo50",
-                                    "authorizationKey": "kfc"
-                                }
-                            }
-                        """.trimIndent()
-                        )
+                        writeText(DEFAULT_CONFIG)
                     }
                     val serializer = MapSerializer(String.serializer(), ServerConfig.serializer())
                     val servers = Json.decodeFromString(serializer, readText())
@@ -55,13 +58,13 @@ public class KFCFactory : EncryptService.Factory {
                         ?: throw NoSuchElementException("没有找到对应 ${impl.ver} 的服务配置，${toPath().toUri()}")
                 }
 
-                when (val type = server.type.ifEmpty { if (server.key.isNotEmpty()) "unidbg-fetch-qsign" else "magic-signer-guide" }) {
-                    "unidbg-fetch-qsign" -> UnidbgFetchQsign(
+                when (val type = server.type.ifEmpty { throw IllegalArgumentException("need server type") }) {
+                    "fuqiuluo/unidbg-fetch-qsign", "fuqiuluo", "unidbg-fetch-qsign" -> UnidbgFetchQsign(
                         server = server.base,
                         key = server.key,
                         coroutineContext = serviceSubScope.coroutineContext
                     )
-                    "magic-signer-guide" -> ViVo50(
+                    "kiliokuara/magic-signer-guide", "kiliokuara", "magic-signer-guide", "vivo50" -> ViVo50(
                         server = server.base,
                         serverIdentityKey = server.serverIdentityKey,
                         authorizationKey = server.authorizationKey,
