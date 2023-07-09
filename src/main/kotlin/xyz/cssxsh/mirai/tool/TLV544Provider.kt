@@ -23,7 +23,11 @@ public class TLV544Provider : EncryptService {
         internal external fun sign(payload: ByteArray): ByteArray
 
         @JvmStatic
-        public fun install() {
+        private val load = java.util.concurrent.atomic.AtomicBoolean(false)
+
+        @JvmStatic
+        public fun load() {
+            if (load.get() || load.compareAndSet(false, true).not()) return
             val os = when (val name = System.getProperty("os.name")) {
                 "Mac OS X" -> "macos"
                 "Linux" -> if (System.getenv("TERMUX_VERSION") != null) "android" else "linux"
@@ -61,7 +65,11 @@ public class TLV544Provider : EncryptService {
             }
             logger.info("load: ${file.toPath().toUri()}")
             System.load(file.absolutePath)
+        }
 
+        @JvmStatic
+        public fun install() {
+            load()
             Services.register(
                 "net.mamoe.mirai.internal.spi.EncryptService",
                 "xyz.cssxsh.mirai.tool.TLV544Provider",

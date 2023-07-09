@@ -26,7 +26,10 @@ public class KFCFactory : EncryptService.Factory {
             BotConfiguration.MiraiProtocol.ANDROID_PHONE, BotConfiguration.MiraiProtocol.ANDROID_PAD -> {
                 val impl = MiraiProtocolInternal[protocol]
 
-                if (impl.ver == "8.8.88") return TLV544Provider()
+                if (impl.ver == "8.8.88") {
+                    TLV544Provider.load()
+                    return TLV544Provider()
+                }
 
                 val server = with(java.io.File("KFCFactory.json")) {
                     if (exists().not()) {
