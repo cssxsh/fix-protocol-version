@@ -116,6 +116,7 @@ public class ViVo50(
 
         val token = handshake(uin = context.id)
         openSession(token = token, bot = context.id)
+        checkSession(token = token)
         coroutineContext[Job]?.invokeOnCompletion {
             try {
                 deleteSession(token = token)
