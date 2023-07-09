@@ -62,7 +62,7 @@ public class ViVo50(
 
     private lateinit var channel: EncryptService.ChannelProxy
 
-    private var cmd: List<String> = emptyList()
+    private var white: List<String> = emptyList()
 
     private val packet: MutableMap<String, CompletableFuture<JsonObject>> = ConcurrentHashMap()
 
@@ -173,7 +173,7 @@ public class ViVo50(
         sendCommand(type = "rpc.get_cmd_white_list", deserializer = ListSerializer(String.serializer())) {
             // ...
         }.also {
-            cmd = checkNotNull(it)
+            white = checkNotNull(it)
         }
 
         logger.info("Bot(${context.id}) initialize complete")
@@ -351,7 +351,7 @@ public class ViVo50(
         commandName: String,
         payload: ByteArray
     ): EncryptService.SignResult? {
-        if (commandName !in cmd) return null
+        if (white.isEmpty().not() && commandName !in white) return null
 
         logger.debug("Bot(${context.id}) sign $commandName")
 
