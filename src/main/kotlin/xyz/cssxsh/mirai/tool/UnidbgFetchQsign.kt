@@ -106,9 +106,8 @@ public class UnidbgFetchQsign(private val server: String, private val key: Strin
         if (commandName == "StatSvc.register") {
             if (!token.get() && token.compareAndSet(false, true)) {
                 launch(CoroutineName("RequestToken")) {
-                    requestToken(uin = context.id)
                     while (isActive) {
-                        delay((30 .. 40).random() * 60_000L)
+                        delay((30..40).random() * 60_000L)
 
                         requestToken(uin = context.id)
                     }
