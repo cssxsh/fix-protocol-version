@@ -113,7 +113,7 @@ public class ViVo50(
         channel = context.extraArgs[EncryptServiceContext.KEY_CHANNEL_PROXY]
 
         handshake(uin = context.id)
-        openSession(token = token)
+        openSession(token = token, bot = context.id)
         sendCommand(type = "rpc.initialize", deserializer = JsonElement.serializer()) {
             putJsonObject("extArgs") {
                 put("KEY_QIMEI36", qimei36)
@@ -201,7 +201,7 @@ public class ViVo50(
         token = Base64.getDecoder().decode(result.token).decodeToString()
     }
 
-    private fun openSession(token: String) {
+    private fun openSession(token: String, bot: Long) {
         val listener = object : WebSocketListener {
             override fun onOpen(websocket: WebSocket) {
                 // ...
@@ -229,7 +229,7 @@ public class ViVo50(
                         val uin = json["botUin"]!!.jsonPrimitive.long
                         val cmd = json["command"]!!.jsonPrimitive.content
                         launch(CoroutineName(id)) {
-                            logger.info("Bot(${uin}) sendMessage <- $cmd")
+                            logger.verbose("Bot(${bot}) sendMessage <- $cmd")
 
                             val result = channel.sendMessage(
                                 remark = json["remark"]!!.jsonPrimitive.content,
@@ -239,16 +239,19 @@ public class ViVo50(
                             )
 
                             if (result == null) {
-                                logger.debug("Bot(${uin}) ChannelResult is null")
+                                logger.debug("Bot(${bot}) ChannelResult is null")
                                 return@launch
                             }
-                            logger.info("Bot(${uin}) sendMessage -> ${result.cmd}")
+                            logger.verbose("Bot(${bot}) sendMessage -> ${result.cmd}")
 
                             sendPacket(type = "rpc.service.send", id = id) {
                                 put("command", result.cmd)
                                 put("data", result.data.toUHexString(""))
                             }
                         }
+                    }
+                    "service.interrupt" -> {
+                        logger.error("Bot(${bot}) $text")
                     }
                     else -> {
                         // ...
@@ -297,6 +300,8 @@ public class ViVo50(
         payload: ByteArray
     ): EncryptService.SignResult? {
         if (commandName !in cmd) return null
+
+        logger.debug("Bot(${context.id}) sign $commandName")
 
         val response = sendCommand(type = "rpc.sign", deserializer = RpcSignResult.serializer()) {
             put("seqId", sequenceId)
