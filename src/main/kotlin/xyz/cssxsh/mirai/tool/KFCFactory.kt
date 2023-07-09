@@ -32,6 +32,10 @@ public class KFCFactory : EncryptService.Factory {
                     "type": "kiliokuara/magic-signer-guide",
                     "serverIdentityKey": "vivo50",
                     "authorizationKey": "kfc"
+                },
+                "8.8.88": {
+                    "base_url": "http://127.0.0.1:80",
+                    "type": "TLV544Provider"
                 }
             }
         """.trimIndent()
@@ -42,11 +46,6 @@ public class KFCFactory : EncryptService.Factory {
         return when (val protocol = context.extraArgs[EncryptServiceContext.KEY_BOT_PROTOCOL]) {
             BotConfiguration.MiraiProtocol.ANDROID_PHONE, BotConfiguration.MiraiProtocol.ANDROID_PAD -> {
                 val impl = MiraiProtocolInternal[protocol]
-
-                if (impl.ver == "8.8.88") {
-                    TLV544Provider.load()
-                    return TLV544Provider()
-                }
 
                 val server = with(java.io.File("KFCFactory.json")) {
                     if (exists().not()) {
@@ -70,6 +69,10 @@ public class KFCFactory : EncryptService.Factory {
                         authorizationKey = server.authorizationKey,
                         coroutineContext = serviceSubScope.coroutineContext
                     )
+                    "TLV544Provider" -> {
+                        TLV544Provider.load()
+                        TLV544Provider()
+                    }
                     else -> throw UnsupportedOperationException(type)
                 }
             }
