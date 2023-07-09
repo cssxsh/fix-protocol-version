@@ -172,7 +172,7 @@ public class UnidbgFetchQsign(private val server: String, private val key: Strin
         val response = client.prepareGet("${server}/submit")
             .addQueryParam("uin", uin.toString())
             .addQueryParam("cmd", cmd)
-            .addQueryParam("callbackId", callbackId.toString())
+            .addQueryParam("callback_id", callbackId.toString())
             .addQueryParam("buffer", buffer.toUHexString(""))
             .execute().get()
         val body = Json.decodeFromString(DataWrapper.serializer(), response.responseBody)
