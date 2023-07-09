@@ -121,7 +121,7 @@ public class ViVo50(
             try {
                 deleteSession(token = token)
             } catch (cause: Throwable) {
-                logger.error(cause)
+                logger.warning(cause)
             }
             try {
                 websocket.sendCloseFrame()
