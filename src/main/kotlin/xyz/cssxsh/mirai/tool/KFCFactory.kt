@@ -74,8 +74,10 @@ public class KFCFactory : EncryptService.Factory {
                 }
             }
             BotConfiguration.MiraiProtocol.ANDROID_WATCH -> throw UnsupportedOperationException(protocol.name)
-            BotConfiguration.MiraiProtocol.IPAD -> TLV544Provider()
-            BotConfiguration.MiraiProtocol.MACOS -> TLV544Provider()
+            BotConfiguration.MiraiProtocol.IPAD, BotConfiguration.MiraiProtocol.MACOS -> {
+                TLV544Provider.load()
+                TLV544Provider()
+            }
         }
     }
 }

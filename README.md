@@ -13,6 +13,24 @@
 
 在 `1.7.0+` 中加入了 TLV544Provider, 但实际效果有限。
 
+在 `1.9.0+` 中加入了 KFCFactory, 以对接第三方服务
+KFCFactory.json  
+```json
+{
+    "0.0.0": {
+        "base_url": "http://127.0.0.1:8080",
+        "type": "fuqiuluo/unidbg-fetch-qsign",
+        "key": "114514"
+    },
+    "0.1.0": {
+        "base_url": "http://127.0.0.1:8888",
+        "type": "kiliokuara/magic-signer-guide",
+        "serverIdentityKey": "vivo50",
+        "authorizationKey": "kfc"
+    }
+}
+```
+
 ## Mirai Console 使用方法
 
 下载 `mirai2.jar` 放到 `plugins` ，重启 `Mirai Console` 即可  

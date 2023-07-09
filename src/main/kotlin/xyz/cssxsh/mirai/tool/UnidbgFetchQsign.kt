@@ -10,8 +10,8 @@ import org.asynchttpclient.*
 import kotlin.coroutines.*
 
 @OptIn(MiraiInternalApi::class)
-public class UnidbgFetchQsign(private val server: String, private val key: String, coroutineContext: CoroutineContext)
-    : EncryptService, CoroutineScope {
+public class UnidbgFetchQsign(private val server: String, private val key: String, coroutineContext: CoroutineContext) :
+    EncryptService, CoroutineScope {
 
     override val coroutineContext: CoroutineContext =
         coroutineContext + SupervisorJob(coroutineContext[Job]) + CoroutineExceptionHandler { context, exception ->
@@ -45,7 +45,12 @@ public class UnidbgFetchQsign(private val server: String, private val key: Strin
         val qimei36 = context.extraArgs[EncryptServiceContext.KEY_QIMEI36]
         val channel = context.extraArgs[EncryptServiceContext.KEY_CHANNEL_PROXY]
 
-        register(uin = context.id, androidId = device.androidId.decodeToString(), guid = device.guid.toUHexString(), qimei36 = qimei36)
+        register(
+            uin = context.id,
+            androidId = device.androidId.decodeToString(),
+            guid = device.guid.toUHexString(),
+            qimei36 = qimei36
+        )
 
         channel0 = channel
     }
@@ -144,7 +149,7 @@ public class UnidbgFetchQsign(private val server: String, private val key: Strin
         )
     }
 
-    private fun sign(uin: Long, cmd: String, seq: Int, buffer: ByteArray) : SignResult {
+    private fun sign(uin: Long, cmd: String, seq: Int, buffer: ByteArray): SignResult {
         val response = client.preparePost("${server}/sign")
             .addFormParam("uin", uin.toString())
             .addFormParam("cmd", cmd)
