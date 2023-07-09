@@ -5,6 +5,7 @@ import kotlinx.serialization.*
 import kotlinx.serialization.builtins.*
 import kotlinx.serialization.json.*
 import net.mamoe.mirai.internal.spi.*
+import net.mamoe.mirai.internal.utils.*
 import net.mamoe.mirai.utils.*
 import org.asynchttpclient.*
 import org.asynchttpclient.netty.ws.*
@@ -110,6 +111,7 @@ public class ViVo50(
     override fun initialize(context: EncryptServiceContext) {
         val device = context.extraArgs[EncryptServiceContext.KEY_DEVICE_INFO]
         val qimei36 = context.extraArgs[EncryptServiceContext.KEY_QIMEI36]
+        val protocol = context.extraArgs[EncryptServiceContext.KEY_BOT_PROTOCOL]
         channel = context.extraArgs[EncryptServiceContext.KEY_CHANNEL_PROXY]
 
         handshake(uin = context.id)
@@ -119,7 +121,8 @@ public class ViVo50(
                 put("KEY_QIMEI36", qimei36)
                 putJsonObject("BOT_PROTOCOL") {
                     putJsonObject("protocolValue") {
-                        put("ver", "8.9.58")
+                        @Suppress("INVISIBLE_MEMBER")
+                        put("ver", MiraiProtocolInternal[protocol].ver)
                     }
                 }
             }
