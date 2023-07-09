@@ -394,7 +394,10 @@ private data class HandshakeResult(
 
 @Serializable
 private data class RpcSignResult(
+    @SerialName("sign")
     val sign: String,
+    @SerialName("token")
     val token: String,
+    @SerialName("extra")
     val extra: String,
 )
