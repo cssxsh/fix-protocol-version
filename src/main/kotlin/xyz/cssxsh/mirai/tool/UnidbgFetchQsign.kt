@@ -66,7 +66,7 @@ public class UnidbgFetchQsign(private val server: String, private val key: Strin
         val body = Json.decodeFromString(DataWrapper.serializer(), response.responseBody)
         check(body.code == 0) { body.message }
 
-        logger.debug("Bot(${uin}) register, ${body.message}")
+        logger.info("Bot(${uin}) register, ${body.message}")
     }
 
     private fun requestToken(uin: Long) {
@@ -76,7 +76,7 @@ public class UnidbgFetchQsign(private val server: String, private val key: Strin
         val body = Json.decodeFromString(DataWrapper.serializer(), response.responseBody)
         check(body.code == 0) { body.message }
 
-        logger.debug("Bot(${uin}) request_token, ${body.message}")
+        logger.info("Bot(${uin}) request_token, ${body.message}")
     }
 
     override fun encryptTlv(context: EncryptServiceContext, tlvType: Int, payload: ByteArray): ByteArray? {

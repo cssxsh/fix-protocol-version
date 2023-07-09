@@ -114,6 +114,8 @@ public class ViVo50(
         val protocol = context.extraArgs[EncryptServiceContext.KEY_BOT_PROTOCOL]
         channel = context.extraArgs[EncryptServiceContext.KEY_CHANNEL_PROXY]
 
+        logger.info("Bot(${context.id} initialize ...")
+
         handshake(uin = context.id)
         openSession(token = token, bot = context.id)
         coroutineContext[Job]?.invokeOnCompletion {
@@ -174,6 +176,8 @@ public class ViVo50(
         }.also {
             cmd = checkNotNull(it)
         }
+
+        logger.info("Bot(${context.id} initialize complete")
     }
 
     private fun handshake(uin: Long) {
