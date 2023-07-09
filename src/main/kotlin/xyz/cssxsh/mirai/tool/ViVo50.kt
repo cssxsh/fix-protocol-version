@@ -116,7 +116,18 @@ public class ViVo50(
 
         handshake(uin = context.id)
         openSession(token = token, bot = context.id)
-        coroutineContext[Job]?.invokeOnCompletion { deleteSession(token = token) }
+        coroutineContext[Job]?.invokeOnCompletion {
+            try {
+                deleteSession(token = token)
+            } catch (cause: Throwable) {
+                logger.error(cause)
+            }
+            try {
+                websocket.sendCloseFrame()
+            } catch (cause: Throwable) {
+                logger.error(cause)
+            }
+        }
         sendCommand(type = "rpc.initialize", deserializer = JsonElement.serializer()) {
             putJsonObject("extArgs") {
                 put("KEY_QIMEI36", qimei36)
