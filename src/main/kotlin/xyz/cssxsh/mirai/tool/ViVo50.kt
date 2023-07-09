@@ -220,6 +220,7 @@ public class ViVo50(
     }
 
     private fun openSession(token: String, bot: Long) {
+        var error: Throwable? = null
         val listener = object : WebSocketListener {
             override fun onOpen(websocket: WebSocket) {
                 // ...
@@ -230,6 +231,7 @@ public class ViVo50(
             }
 
             override fun onError(cause: Throwable) {
+                error = cause
                 logger.error(cause)
             }
 
@@ -294,7 +296,7 @@ public class ViVo50(
                     .addWebSocketListener(listener)
                     .build()
             )
-            .get() ?: throw IllegalStateException("...")
+            .get() ?: throw IllegalStateException("open session fail", error)
     }
 
     private fun checkSession(token: String) {
