@@ -227,7 +227,7 @@ public class ViVo50(
             }
 
             override fun onClose(websocket: WebSocket, code: Int, reason: String?) {
-                logger.error(reason)
+                if (code != 1_000) logger.warning("$code - $reason")
             }
 
             override fun onError(cause: Throwable) {
