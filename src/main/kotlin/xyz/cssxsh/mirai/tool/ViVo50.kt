@@ -58,7 +58,7 @@ public class ViVo50(
         .apply { initialize(4096) }
         .generateKeyPair()
 
-    private lateinit var websocket: NettyWebSocket
+    private lateinit var websocket: WebSocket
 
     private lateinit var channel: EncryptService.ChannelProxy
 
@@ -115,7 +115,7 @@ public class ViVo50(
         logger.info("Bot(${context.id}) initialize by $server")
 
         val token = handshake(uin = context.id)
-        openSession(token = token, bot = context.id)
+        websocket = openSession(token = token, bot = context.id)
         checkSession(token = token)
         coroutineContext[Job]?.invokeOnCompletion {
             try {
@@ -189,7 +189,7 @@ public class ViVo50(
             .toByteArray().sha1().toUHexString("").lowercase()
 
         check(clientKeySignature == config.keySignature) {
-            "client calculated key signature doesn't match the server provides."
+            "请检查 serverIdentityKey 是否正确。(client calculated key signature doesn't match the server provides.)"
         }
 
         val secret = buildJsonObject {
@@ -219,7 +219,7 @@ public class ViVo50(
         return Base64.getDecoder().decode(result.token).decodeToString()
     }
 
-    private fun openSession(token: String, bot: Long) {
+    private fun openSession(token: String, bot: Long): WebSocket {
         var error: Throwable? = null
         val listener = object : WebSocketListener {
             override fun onOpen(websocket: WebSocket) {
@@ -280,7 +280,7 @@ public class ViVo50(
             }
         }
         val (timestamp, signature) = signature()
-        websocket = client.prepareGet("${server}/service/rpc/session".replace("http", "ws"))
+        return client.prepareGet("${server}/service/rpc/session".replace("http", "ws"))
             .addHeader("Authorization", token)
             .addHeader("X-SEC-Time", timestamp)
             .addHeader("X-SEC-Signature", signature)
