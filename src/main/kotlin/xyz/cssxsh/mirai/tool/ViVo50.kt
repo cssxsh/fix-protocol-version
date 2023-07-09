@@ -55,7 +55,7 @@ public class ViVo50(
     private val sharedKey = SecretKeySpec(UUID.randomUUID().toString().substring(0, 16).encodeToByteArray(), "AES")
 
     private val rsaKeyPair: KeyPair = KeyPairGenerator.getInstance("RSA")
-        .apply { initialize(2048) }
+        .apply { initialize(4096) }
         .generateKeyPair()
 
     private lateinit var websocket: NettyWebSocket
