@@ -63,7 +63,6 @@ public class ViVo50(
 
     private lateinit var channel: EncryptService.ChannelProxy
 
-
     private var cmd: List<String> = emptyList()
 
     private val packet: MutableMap<String, CompletableFuture<JsonObject>> = ConcurrentHashMap()
@@ -73,14 +72,9 @@ public class ViVo50(
         return Json.decodeFromString(deserializer, response.responseBody)
     }
 
-    private fun sendPacket(type: String, id: String = "", block: JsonObjectBuilder.() -> Unit): JsonObject {
-
-        val uuid = id.ifEmpty { UUID.randomUUID().toString() }
-        val future = CompletableFuture<JsonObject>()
-        packet[uuid] = future
-
+    private fun sendPacket(type: String, id: String, block: JsonObjectBuilder.() -> Unit) {
         val packet = buildJsonObject {
-            put("packetId", uuid)
+            put("packetId", id)
             put("packetType", type)
             block.invoke(this)
         }
@@ -88,8 +82,29 @@ public class ViVo50(
         val cipher = Cipher.getInstance("AES/ECB/PKCS5Padding")
         cipher.init(Cipher.ENCRYPT_MODE, sharedKey)
         websocket.sendBinaryFrame(cipher.doFinal(text.encodeToByteArray()))
+    }
 
-        return future.get(60, TimeUnit.SECONDS)
+    private fun <T> sendCommand(
+        type: String,
+        deserializer: DeserializationStrategy<T>,
+        block: JsonObjectBuilder.() -> Unit
+    ): T? {
+
+        val uuid = UUID.randomUUID().toString()
+        val future = CompletableFuture<JsonObject>()
+        packet[uuid] = future
+
+        sendPacket(type = type, id = uuid, block = block)
+
+        val json = future.get(60, TimeUnit.SECONDS)
+
+        json["message"]?.jsonPrimitive?.content?.let {
+            throw IllegalStateException(it)
+        }
+
+        val response = json["response"] ?: return null
+
+        return Json.decodeFromJsonElement(deserializer, response)
     }
 
     override fun initialize(context: EncryptServiceContext) {
@@ -99,7 +114,7 @@ public class ViVo50(
 
         handshake(uin = context.id)
         openSession(token = token)
-        sendPacket(type = "rpc.initialize", id = "rpc.initialize") {
+        sendCommand(type = "rpc.initialize", deserializer = JsonElement.serializer()) {
             putJsonObject("extArgs") {
                 put("KEY_QIMEI36", qimei36)
                 putJsonObject("BOT_PROTOCOL") {
@@ -138,17 +153,11 @@ public class ViVo50(
                 @OptIn(MiraiInternalApi::class)
                 put("guid", device.guid.toUHexString(""))
             }
-        }.apply {
-            get("message")?.jsonPrimitive?.content?.let {
-                throw IllegalStateException(it)
-            }
         }
-        sendPacket(type = "rpc.get_cmd_white_list", id = "rpc.get_cmd_white_list") {
+        sendCommand(type = "rpc.get_cmd_white_list", deserializer = ListSerializer(String.serializer())) {
             // ...
-        }.apply {
-            get("message")?.jsonPrimitive?.content?.let {
-                throw IllegalStateException(it)
-            }
+        }.also {
+            cmd = checkNotNull(it)
         }
     }
 
@@ -212,9 +221,11 @@ public class ViVo50(
                 val text = cipher.doFinal(payload).decodeToString()
 
                 val json = Json.parseToJsonElement(text).jsonObject
+                val id = json["packetId"]!!.jsonPrimitive.content
+                packet[id]?.complete(json)
+
                 when (json["packetType"]?.jsonPrimitive?.content) {
                     "rpc.service.send" -> {
-                        val id = json["packetId"]!!.jsonPrimitive.content
                         val uin = json["botUin"]!!.jsonPrimitive.long
                         val cmd = json["command"]!!.jsonPrimitive.content
                         launch(CoroutineName(id)) {
@@ -240,9 +251,7 @@ public class ViVo50(
                         }
                     }
                     else -> {
-                        val id = json["packetId"]!!.jsonPrimitive.content
-                        val future = packet[id]!!
-                        future.complete(json)
+                        // ...
                     }
                 }
             }
@@ -270,14 +279,13 @@ public class ViVo50(
     override fun encryptTlv(context: EncryptServiceContext, tlvType: Int, payload: ByteArray): ByteArray? {
         val command = context.extraArgs[EncryptServiceContext.KEY_COMMAND_STR]
 
-        val result = sendPacket(type = "rpc.tlv") {
+        val hex = sendCommand(type = "rpc.tlv", deserializer = String.serializer()) {
             put("tlvType", tlvType)
             putJsonObject("extArgs") {
                 put("KEY_COMMAND_STR", command)
             }
             put("content", payload.toUHexString(""))
-        }
-        val hex = result["response"]?.jsonPrimitive?.content ?: return null
+        } ?: return null
 
         return hex.hexToBytes()
     }
@@ -290,21 +298,19 @@ public class ViVo50(
     ): EncryptService.SignResult? {
         if (commandName !in cmd) return null
 
-        val result = sendPacket(type = "rpc.sign") {
+        val response = sendCommand(type = "rpc.sign", deserializer = RpcSignResult.serializer()) {
             put("seqId", sequenceId)
             put("command", commandName)
             putJsonObject("extArgs") {
                 // ...
             }
             put("content", payload.toUHexString(""))
-        }
-
-        val response = result["response"]?.jsonObject ?: return null
+        } ?: return null
 
         return EncryptService.SignResult(
-            sign = response["sign"]!!.jsonPrimitive.content.hexToBytes(),
-            extra = response["extra"]!!.jsonPrimitive.content.hexToBytes(),
-            token = response["token"]!!.jsonPrimitive.content.hexToBytes(),
+            sign = response.sign.hexToBytes(),
+            extra = response.extra.hexToBytes(),
+            token = response.token.hexToBytes(),
         )
     }
 }
@@ -327,4 +333,11 @@ private data class HandshakeResult(
     val reason: String = "",
     @SerialName("token")
     val token: String = ""
+)
+
+@Serializable
+private data class RpcSignResult(
+    val sign: String,
+    val token: String,
+    val extra: String,
 )
