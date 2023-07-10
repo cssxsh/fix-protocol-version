@@ -64,8 +64,6 @@ public class ViVo50(
 
     private var white: List<String> = emptyList()
 
-    private val packet: MutableMap<String, CompletableFuture<JsonObject>> = ConcurrentHashMap()
-
     private fun <T> ListenableFuture<Response>.getBody(deserializer: DeserializationStrategy<T>): T {
         val response = get()
         return Json.decodeFromString(deserializer, response.responseBody)
@@ -83,6 +81,7 @@ public class ViVo50(
         val session = Session(token = token, bot = context.id)
         session.websocket()
         coroutineContext.job.invokeOnCompletion { session.close() }
+        this.session = session
         session.sendCommand(type = "rpc.initialize", deserializer = JsonElement.serializer()) {
             putJsonObject("extArgs") {
                 put("KEY_QIMEI36", qimei36)
@@ -127,7 +126,6 @@ public class ViVo50(
         session.sendCommand(type = "rpc.get_cmd_white_list", deserializer = ListSerializer(String.serializer())).also {
             white = checkNotNull(it)
         }
-        this.session = session
 
         logger.info("Bot(${context.id}) initialize complete")
     }
@@ -223,6 +221,7 @@ public class ViVo50(
 
     private inner class Session(val bot: Long, val token: String) : WebSocketListener, AutoCloseable {
         private var websocket0: WebSocket? = null
+        private val packet: MutableMap<String, CompletableFuture<JsonObject>> = ConcurrentHashMap()
 
         override fun onOpen(websocket: WebSocket) {
             websocket0 = websocket
@@ -230,7 +229,7 @@ public class ViVo50(
 
         override fun onClose(websocket: WebSocket, code: Int, reason: String?) {
             websocket0 = null
-            if (code != 1_000) logger.warning("$code - $reason")
+            if (code != 1_000) logger.warning("Session(bot=${bot}) closed, $code - $reason")
         }
 
         override fun onError(cause: Throwable) {
