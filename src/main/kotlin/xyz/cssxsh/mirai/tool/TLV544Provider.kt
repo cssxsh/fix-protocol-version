@@ -26,7 +26,7 @@ public class TLV544Provider : EncryptService {
         private val load = java.util.concurrent.atomic.AtomicBoolean(false)
 
         @JvmStatic
-        public fun load() {
+        internal fun native() {
             if (load.get() || load.compareAndSet(false, true).not()) return
             val os = when (val name = System.getProperty("os.name")) {
                 "Mac OS X" -> "macos"
@@ -69,13 +69,16 @@ public class TLV544Provider : EncryptService {
 
         @JvmStatic
         public fun install() {
-            load()
             Services.register(
                 "net.mamoe.mirai.internal.spi.EncryptService",
                 "xyz.cssxsh.mirai.tool.TLV544Provider",
                 ::TLV544Provider
             )
         }
+    }
+
+    init {
+        native()
     }
 
     @Suppress("INVISIBLE_MEMBER")
