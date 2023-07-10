@@ -7,8 +7,10 @@ import kotlinx.serialization.json.*
 import net.mamoe.mirai.internal.spi.*
 import net.mamoe.mirai.internal.utils.*
 import net.mamoe.mirai.utils.*
+import java.io.File
 
-public class KFCFactory : EncryptService.Factory {
+public class KFCFactory(private val config: File) : EncryptService.Factory {
+    public constructor(): this(config = File("KFCFactory.json"))
     public companion object {
         @JvmStatic
         public fun install() {
@@ -30,8 +32,8 @@ public class KFCFactory : EncryptService.Factory {
                 "0.1.0": {
                     "base_url": "http://127.0.0.1:8888",
                     "type": "kiliokuara/magic-signer-guide",
-                    "serverIdentityKey": "vivo50",
-                    "authorizationKey": "kfc"
+                    "server_identity_key": "vivo50",
+                    "authorization_key": "kfc"
                 },
                 "8.8.88": {
                     "base_url": "http://127.0.0.1:80",
@@ -39,6 +41,14 @@ public class KFCFactory : EncryptService.Factory {
                 }
             }
         """.trimIndent()
+    }
+
+    init {
+        with(config) {
+            if (exists().not()) {
+                writeText(DEFAULT_CONFIG)
+            }
+        }
     }
 
     @Suppress("INVISIBLE_MEMBER")
@@ -50,14 +60,10 @@ public class KFCFactory : EncryptService.Factory {
         }
         return when (val protocol = context.extraArgs[EncryptServiceContext.KEY_BOT_PROTOCOL]) {
             BotConfiguration.MiraiProtocol.ANDROID_PHONE, BotConfiguration.MiraiProtocol.ANDROID_PAD -> {
-                val impl = MiraiProtocolInternal[protocol]
-
-                val server = with(java.io.File("KFCFactory.json")) {
-                    if (exists().not()) {
-                        writeText(DEFAULT_CONFIG)
-                    }
+                val server = with(config) {
                     val serializer = MapSerializer(String.serializer(), ServerConfig.serializer())
                     val servers = Json.decodeFromString(serializer, readText())
+                    val impl = MiraiProtocolInternal[protocol]
                     servers[impl.ver]
                         ?: throw NoSuchElementException("没有找到对应 ${impl.ver} 的服务配置，${toPath().toUri()}")
                 }
@@ -84,11 +90,12 @@ public class KFCFactory : EncryptService.Factory {
     }
 
     override fun toString(): String {
-        return "KFCFactory(config=${java.io.File("KFCFactory.json").toPath().toUri()})"
+        return "KFCFactory(config=${config.toPath().toUri()})"
     }
 }
 
 @Serializable
+@OptIn(ExperimentalSerializationApi::class)
 private data class ServerConfig(
     @SerialName("base_url")
     val base: String,
@@ -96,8 +103,10 @@ private data class ServerConfig(
     val type: String = "",
     @SerialName("key")
     val key: String = "",
-    @SerialName("serverIdentityKey")
+    @SerialName("server_identity_key")
+    @JsonNames("serverIdentityKey")
     val serverIdentityKey: String = "",
-    @SerialName("authorizationKey")
+    @SerialName("authorization_key")
+    @JsonNames("authorizationKey")
     val authorizationKey: String = ""
 )
