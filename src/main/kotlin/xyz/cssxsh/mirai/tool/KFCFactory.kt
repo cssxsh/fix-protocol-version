@@ -8,6 +8,8 @@ import net.mamoe.mirai.internal.spi.*
 import net.mamoe.mirai.internal.utils.*
 import net.mamoe.mirai.utils.*
 import java.io.File
+import java.net.ConnectException
+import java.net.URL
 
 public class KFCFactory(private val config: File) : EncryptService.Factory {
     public constructor(): this(config = File("KFCFactory.json"))
@@ -66,6 +68,12 @@ public class KFCFactory(private val config: File) : EncryptService.Factory {
                     val impl = MiraiProtocolInternal[protocol]
                     servers[impl.ver]
                         ?: throw NoSuchElementException("没有找到对应 ${impl.ver} 的服务配置，${toPath().toUri()}")
+                }
+
+                try {
+                    URL(server.base).openConnection().connect()
+                } catch (cause: ConnectException) {
+                    throw RuntimeException("请检查 ${server.base} 的可用性", cause)
                 }
 
                 when (val type = server.type.ifEmpty { throw IllegalArgumentException("need server type") }) {
