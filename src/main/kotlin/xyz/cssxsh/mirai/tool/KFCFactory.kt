@@ -82,6 +82,10 @@ public class KFCFactory : EncryptService.Factory {
             BotConfiguration.MiraiProtocol.IPAD, BotConfiguration.MiraiProtocol.MACOS -> TLV544Provider()
         }
     }
+
+    override fun toString(): String {
+        return "KFCFactory(config=${java.io.File("KFCFactory.json").toPath().toUri()})"
+    }
 }
 
 @Serializable
