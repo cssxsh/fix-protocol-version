@@ -225,6 +225,7 @@ public class ViVo50(
 
         override fun onOpen(websocket: WebSocket) {
             websocket0 = websocket
+            logger.info("Session(bot=${bot}) opened")
         }
 
         override fun onClose(websocket: WebSocket, code: Int, reason: String?) {
@@ -233,7 +234,7 @@ public class ViVo50(
         }
 
         override fun onError(cause: Throwable) {
-            throw cause
+            throw IllegalStateException("Session(bot=${bot}) ${if (websocket0 == null) "open fail" else "error"}", cause)
         }
 
         override fun onBinaryFrame(payload: ByteArray, finalFragment: Boolean, rsv: Int) {
@@ -292,7 +293,7 @@ public class ViVo50(
                         .addWebSocketListener(this)
                         .build()
                 )
-                .get() ?: throw IllegalStateException("open session fail")
+                .get() ?: throw IllegalStateException("Session(bot=${bot}) open fail")
         }
 
         private fun check(): WebSocket? {
@@ -306,7 +307,7 @@ public class ViVo50(
             return when (response.statusCode) {
                 204 -> websocket0
                 404 -> null
-                else -> throw IllegalStateException(response.responseBody)
+                else -> throw IllegalStateException("Session(bot=${bot}) ${response.responseBody}")
             }
         }
 
@@ -319,11 +320,9 @@ public class ViVo50(
                 .execute().get()
 
             when (response.statusCode) {
-                204 -> {
-                    websocket0 = null
-                }
+                204 -> websocket0 = null
                 404 -> throw NoSuchElementException(toString())
-                else -> throw IllegalStateException(response.responseBody)
+                else -> throw IllegalStateException("Session(bot=${bot}) ${response.responseBody}")
             }
         }
 
@@ -342,7 +341,9 @@ public class ViVo50(
             }
         }
 
+        @Synchronized
         fun websocket(): WebSocket {
+            coroutineContext.ensureActive()
             return check() ?: open()
         }
 
