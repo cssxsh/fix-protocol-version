@@ -58,7 +58,7 @@ public class ViVo50(
         .apply { initialize(4096) }
         .generateKeyPair()
 
-    private lateinit var websocket: WebSocket
+    private lateinit var session: Session
 
     private lateinit var channel: EncryptService.ChannelProxy
 
@@ -71,41 +71,6 @@ public class ViVo50(
         return Json.decodeFromString(deserializer, response.responseBody)
     }
 
-    private fun sendPacket(type: String, id: String, block: JsonObjectBuilder.() -> Unit) {
-        val packet = buildJsonObject {
-            put("packetId", id)
-            put("packetType", type)
-            block.invoke(this)
-        }
-        val text = Json.encodeToString(JsonElement.serializer(), packet)
-        val cipher = Cipher.getInstance("AES/ECB/PKCS5Padding")
-        cipher.init(Cipher.ENCRYPT_MODE, sharedKey)
-        websocket.sendBinaryFrame(cipher.doFinal(text.encodeToByteArray()))
-    }
-
-    private fun <T> sendCommand(
-        type: String,
-        deserializer: DeserializationStrategy<T>,
-        block: JsonObjectBuilder.() -> Unit
-    ): T? {
-
-        val uuid = UUID.randomUUID().toString()
-        val future = CompletableFuture<JsonObject>()
-        packet[uuid] = future
-
-        sendPacket(type = type, id = uuid, block = block)
-
-        val json = future.get(60, TimeUnit.SECONDS)
-
-        json["message"]?.jsonPrimitive?.content?.let {
-            throw IllegalStateException(it)
-        }
-
-        val response = json["response"] ?: return null
-
-        return Json.decodeFromJsonElement(deserializer, response)
-    }
-
     override fun initialize(context: EncryptServiceContext) {
         val device = context.extraArgs[EncryptServiceContext.KEY_DEVICE_INFO]
         val qimei36 = context.extraArgs[EncryptServiceContext.KEY_QIMEI36]
@@ -115,21 +80,10 @@ public class ViVo50(
         logger.info("Bot(${context.id}) initialize by $server")
 
         val token = handshake(uin = context.id)
-        websocket = openSession(token = token, bot = context.id)
-        checkSession(token = token)
-        coroutineContext[Job]?.invokeOnCompletion {
-            try {
-                deleteSession(token = token)
-            } catch (cause: Throwable) {
-                logger.warning(cause)
-            }
-            try {
-                websocket.sendCloseFrame()
-            } catch (cause: Throwable) {
-                logger.error(cause)
-            }
-        }
-        sendCommand(type = "rpc.initialize", deserializer = JsonElement.serializer()) {
+        val session = Session(token = token, bot = context.id)
+        session.websocket()
+        coroutineContext.job.invokeOnCompletion { session.close() }
+        session.sendCommand(type = "rpc.initialize", deserializer = JsonElement.serializer()) {
             putJsonObject("extArgs") {
                 put("KEY_QIMEI36", qimei36)
                 putJsonObject("BOT_PROTOCOL") {
@@ -170,11 +124,10 @@ public class ViVo50(
                 put("guid", device.guid.toUHexString(""))
             }
         }
-        sendCommand(type = "rpc.get_cmd_white_list", deserializer = ListSerializer(String.serializer())) {
-            // ...
-        }.also {
+        session.sendCommand(type = "rpc.get_cmd_white_list", deserializer = ListSerializer(String.serializer())).also {
             white = checkNotNull(it)
         }
+        this.session = session
 
         logger.info("Bot(${context.id}) initialize complete")
     }
@@ -219,102 +172,6 @@ public class ViVo50(
         return Base64.getDecoder().decode(result.token).decodeToString()
     }
 
-    private fun openSession(token: String, bot: Long): WebSocket {
-        var error: Throwable? = null
-        val listener = object : WebSocketListener {
-            override fun onOpen(websocket: WebSocket) {
-                // ...
-            }
-
-            override fun onClose(websocket: WebSocket, code: Int, reason: String?) {
-                if (code != 1_000) logger.warning("$code - $reason")
-            }
-
-            override fun onError(cause: Throwable) {
-                error = cause
-                logger.error(cause)
-            }
-
-            override fun onBinaryFrame(payload: ByteArray, finalFragment: Boolean, rsv: Int) {
-                val cipher = Cipher.getInstance("AES/ECB/PKCS5Padding")
-                cipher.init(Cipher.DECRYPT_MODE, sharedKey)
-                val text = cipher.doFinal(payload).decodeToString()
-
-                val json = Json.parseToJsonElement(text).jsonObject
-                val id = json["packetId"]!!.jsonPrimitive.content
-                packet[id]?.complete(json)
-
-                when (json["packetType"]?.jsonPrimitive?.content) {
-                    "rpc.service.send" -> {
-                        val uin = json["botUin"]!!.jsonPrimitive.long
-                        val cmd = json["command"]!!.jsonPrimitive.content
-                        launch(CoroutineName(id)) {
-                            logger.verbose("Bot(${bot}) sendMessage <- $cmd")
-
-                            val result = channel.sendMessage(
-                                remark = json["remark"]!!.jsonPrimitive.content,
-                                commandName = cmd,
-                                uin = uin,
-                                data = json["data"]!!.jsonPrimitive.content.hexToBytes()
-                            )
-
-                            if (result == null) {
-                                logger.debug("Bot(${bot}) ChannelResult is null")
-                                return@launch
-                            }
-                            logger.verbose("Bot(${bot}) sendMessage -> ${result.cmd}")
-
-                            sendPacket(type = "rpc.service.send", id = id) {
-                                put("command", result.cmd)
-                                put("data", result.data.toUHexString(""))
-                            }
-                        }
-                    }
-                    "service.interrupt" -> {
-                        logger.error("Bot(${bot}) $text")
-                    }
-                    else -> {
-                        // ...
-                    }
-                }
-            }
-        }
-        val (timestamp, signature) = signature()
-        return client.prepareGet("${server}/service/rpc/session".replace("http", "ws"))
-            .addHeader("Authorization", token)
-            .addHeader("X-SEC-Time", timestamp)
-            .addHeader("X-SEC-Signature", signature)
-            .execute(
-                WebSocketUpgradeHandler
-                    .Builder()
-                    .addWebSocketListener(listener)
-                    .build()
-            )
-            .get() ?: throw IllegalStateException("open session fail", error)
-    }
-
-    private fun checkSession(token: String) {
-        val (timestamp, signature) = signature()
-        val response = client.prepareGet("${server}/service/rpc/session/check")
-            .addHeader("Authorization", token)
-            .addHeader("X-SEC-Time", timestamp)
-            .addHeader("X-SEC-Signature", signature)
-            .execute().get()
-
-        check(response.statusCode < 400) { response.responseBody }
-    }
-
-    private fun deleteSession(token: String) {
-        val (timestamp, signature) = signature()
-        val response = client.prepareDelete("${server}/service/rpc/session")
-            .addHeader("Authorization", token)
-            .addHeader("X-SEC-Time", timestamp)
-            .addHeader("X-SEC-Signature", signature)
-            .execute().get()
-
-        check(response.statusCode < 400) { response.responseBody }
-    }
-
     private fun signature(): Pair<String, String> {
         val current = System.currentTimeMillis().toString()
         val privateSignature = Signature.getInstance("SHA256withRSA")
@@ -327,7 +184,7 @@ public class ViVo50(
     override fun encryptTlv(context: EncryptServiceContext, tlvType: Int, payload: ByteArray): ByteArray? {
         val command = context.extraArgs[EncryptServiceContext.KEY_COMMAND_STR]
 
-        val hex = sendCommand(type = "rpc.tlv", deserializer = String.serializer()) {
+        val hex = session.sendCommand(type = "rpc.tlv", deserializer = String.serializer()) {
             put("tlvType", tlvType)
             putJsonObject("extArgs") {
                 put("KEY_COMMAND_STR", command)
@@ -348,7 +205,7 @@ public class ViVo50(
 
         logger.debug("Bot(${context.id}) sign $commandName")
 
-        val response = sendCommand(type = "rpc.sign", deserializer = RpcSignResult.serializer()) {
+        val response = session.sendCommand(type = "rpc.sign", deserializer = RpcSignResult.serializer()) {
             put("seqId", sequenceId)
             put("command", commandName)
             putJsonObject("extArgs") {
@@ -362,6 +219,172 @@ public class ViVo50(
             extra = response.extra.hexToBytes(),
             token = response.token.hexToBytes(),
         )
+    }
+
+    private inner class Session(val bot: Long, val token: String) : WebSocketListener, AutoCloseable {
+        private var websocket0: WebSocket? = null
+
+        override fun onOpen(websocket: WebSocket) {
+            websocket0 = websocket
+        }
+
+        override fun onClose(websocket: WebSocket, code: Int, reason: String?) {
+            websocket0 = null
+            if (code != 1_000) logger.warning("$code - $reason")
+        }
+
+        override fun onError(cause: Throwable) {
+            throw cause
+        }
+
+        override fun onBinaryFrame(payload: ByteArray, finalFragment: Boolean, rsv: Int) {
+            val cipher = Cipher.getInstance("AES/ECB/PKCS5Padding")
+            cipher.init(Cipher.DECRYPT_MODE, sharedKey)
+            val text = cipher.doFinal(payload).decodeToString()
+
+            val json = Json.parseToJsonElement(text).jsonObject
+            val id = json["packetId"]!!.jsonPrimitive.content
+            packet[id]?.complete(json)
+
+            when (json["packetType"]?.jsonPrimitive?.content) {
+                "rpc.service.send" -> {
+                    val uin = json["botUin"]!!.jsonPrimitive.long
+                    val cmd = json["command"]!!.jsonPrimitive.content
+                    launch(CoroutineName(id)) {
+                        logger.verbose("Bot(${bot}) sendMessage <- $cmd")
+
+                        val result = channel.sendMessage(
+                            remark = json["remark"]!!.jsonPrimitive.content,
+                            commandName = cmd,
+                            uin = uin,
+                            data = json["data"]!!.jsonPrimitive.content.hexToBytes()
+                        )
+
+                        if (result == null) {
+                            logger.debug("Bot(${bot}) ChannelResult is null")
+                            return@launch
+                        }
+                        logger.verbose("Bot(${bot}) sendMessage -> ${result.cmd}")
+
+                        sendPacket(type = "rpc.service.send", id = id) {
+                            put("command", result.cmd)
+                            put("data", result.data.toUHexString(""))
+                        }
+                    }
+                }
+                "service.interrupt" -> {
+                    logger.error("Bot(${bot}) $text")
+                }
+                else -> {
+                    // ...
+                }
+            }
+        }
+
+        private fun open(): WebSocket {
+            val (timestamp, signature) = signature()
+            return client.prepareGet("${server}/service/rpc/session".replace("http", "ws"))
+                .addHeader("Authorization", token)
+                .addHeader("X-SEC-Time", timestamp)
+                .addHeader("X-SEC-Signature", signature)
+                .execute(
+                    WebSocketUpgradeHandler
+                        .Builder()
+                        .addWebSocketListener(this)
+                        .build()
+                )
+                .get() ?: throw IllegalStateException("open session fail")
+        }
+
+        private fun check(): WebSocket? {
+            val (timestamp, signature) = signature()
+            val response = client.prepareGet("${server}/service/rpc/session/check")
+                .addHeader("Authorization", token)
+                .addHeader("X-SEC-Time", timestamp)
+                .addHeader("X-SEC-Signature", signature)
+                .execute().get()
+
+            return when (response.statusCode) {
+                204 -> websocket0
+                404 -> null
+                else -> throw IllegalStateException(response.responseBody)
+            }
+        }
+
+        private fun delete() {
+            val (timestamp, signature) = signature()
+            val response = client.prepareDelete("${server}/service/rpc/session")
+                .addHeader("Authorization", token)
+                .addHeader("X-SEC-Time", timestamp)
+                .addHeader("X-SEC-Signature", signature)
+                .execute().get()
+
+            when (response.statusCode) {
+                204 -> {
+                    websocket0 = null
+                }
+                404 -> throw NoSuchElementException(toString())
+                else -> throw IllegalStateException(response.responseBody)
+            }
+        }
+
+        override fun close() {
+            try {
+                delete()
+            } catch (cause: NoSuchElementException) {
+                logger.warning(cause)
+            } catch (cause: Throwable) {
+                logger.error(cause)
+            }
+            try {
+                websocket0?.sendCloseFrame()
+            } catch (cause: Throwable) {
+                logger.error(cause)
+            }
+        }
+
+        fun websocket(): WebSocket {
+            return check() ?: open()
+        }
+
+        fun sendPacket(type: String, id: String, block: JsonObjectBuilder.() -> Unit) {
+            val packet = buildJsonObject {
+                put("packetId", id)
+                put("packetType", type)
+                block.invoke(this)
+            }
+            val text = Json.encodeToString(JsonElement.serializer(), packet)
+            val cipher = Cipher.getInstance("AES/ECB/PKCS5Padding")
+            cipher.init(Cipher.ENCRYPT_MODE, sharedKey)
+            websocket().sendBinaryFrame(cipher.doFinal(text.encodeToByteArray()))
+        }
+
+        fun <T> sendCommand(
+            type: String,
+            deserializer: DeserializationStrategy<T>,
+            block: JsonObjectBuilder.() -> Unit = {}
+        ): T? {
+
+            val uuid = UUID.randomUUID().toString()
+            val future = CompletableFuture<JsonObject>()
+            packet[uuid] = future
+
+            sendPacket(type = type, id = uuid, block = block)
+
+            val json = future.get(60, TimeUnit.SECONDS)
+
+            json["message"]?.jsonPrimitive?.content?.let {
+                throw IllegalStateException(it)
+            }
+
+            val response = json["response"] ?: return null
+
+            return Json.decodeFromJsonElement(deserializer, response)
+        }
+
+        override fun toString(): String {
+            return "Session(bot=${bot}, token=${token})"
+        }
     }
 }
 
