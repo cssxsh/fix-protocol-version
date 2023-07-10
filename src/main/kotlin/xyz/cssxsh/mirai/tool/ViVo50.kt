@@ -60,8 +60,6 @@ public class ViVo50(
 
     private lateinit var session: Session
 
-    private lateinit var channel: EncryptService.ChannelProxy
-
     private var white: List<String> = emptyList()
 
     private fun <T> ListenableFuture<Response>.getBody(deserializer: DeserializationStrategy<T>): T {
@@ -73,12 +71,12 @@ public class ViVo50(
         val device = context.extraArgs[EncryptServiceContext.KEY_DEVICE_INFO]
         val qimei36 = context.extraArgs[EncryptServiceContext.KEY_QIMEI36]
         val protocol = context.extraArgs[EncryptServiceContext.KEY_BOT_PROTOCOL]
-        channel = context.extraArgs[EncryptServiceContext.KEY_CHANNEL_PROXY]
+        val channel = context.extraArgs[EncryptServiceContext.KEY_CHANNEL_PROXY]
 
         logger.info("Bot(${context.id}) initialize by $server")
 
         val token = handshake(uin = context.id)
-        val session = Session(token = token, bot = context.id)
+        val session = Session(token = token, bot = context.id, channel = channel)
         session.websocket()
         coroutineContext.job.invokeOnCompletion { session.close() }
         this.session = session
@@ -219,7 +217,8 @@ public class ViVo50(
         )
     }
 
-    private inner class Session(val bot: Long, val token: String) : WebSocketListener, AutoCloseable {
+    private inner class Session(val bot: Long, val token: String, val channel: EncryptService.ChannelProxy) :
+        WebSocketListener, AutoCloseable {
         private var websocket0: WebSocket? = null
         private val packet: MutableMap<String, CompletableFuture<JsonObject>> = ConcurrentHashMap()
 
@@ -234,7 +233,8 @@ public class ViVo50(
         }
 
         override fun onError(cause: Throwable) {
-            throw IllegalStateException("Session(bot=${bot}) ${if (websocket0 == null) "open fail" else "error"}", cause)
+            val state = if (websocket0 == null) "open fail" else "error"
+            throw IllegalStateException("Session(bot=${bot}) $state", cause)
         }
 
         override fun onBinaryFrame(payload: ByteArray, finalFragment: Boolean, rsv: Int) {
@@ -250,7 +250,7 @@ public class ViVo50(
                 "rpc.service.send" -> {
                     val uin = json["botUin"]!!.jsonPrimitive.long
                     val cmd = json["command"]!!.jsonPrimitive.content
-                    launch(CoroutineName(id)) {
+                    launch(CoroutineName("Session(bot=${bot})")) {
                         logger.verbose("Bot(${bot}) sendMessage <- $cmd")
 
                         val result = channel.sendMessage(
