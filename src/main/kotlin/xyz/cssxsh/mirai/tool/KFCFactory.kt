@@ -43,6 +43,11 @@ public class KFCFactory : EncryptService.Factory {
 
     @Suppress("INVISIBLE_MEMBER")
     override fun createForBot(context: EncryptServiceContext, serviceSubScope: CoroutineScope): EncryptService {
+        try {
+            org.asynchttpclient.Dsl.config()
+        } catch (cause: NoClassDefFoundError) {
+            throw RuntimeException("请参照 https://search.maven.org/artifact/org.asynchttpclient/async-http-client/2.12.3/jar 添加依赖", cause)
+        }
         return when (val protocol = context.extraArgs[EncryptServiceContext.KEY_BOT_PROTOCOL]) {
             BotConfiguration.MiraiProtocol.ANDROID_PHONE, BotConfiguration.MiraiProtocol.ANDROID_PAD -> {
                 val impl = MiraiProtocolInternal[protocol]
