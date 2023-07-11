@@ -29,6 +29,9 @@ public class ViVo50(
     public companion object {
         @JvmStatic
         internal val logger: MiraiLogger = MiraiLogger.Factory.create(ViVo50::class)
+
+        @JvmStatic
+        public val SESSION_EXCEPT_TIMEOUT: String = "xyz.cssxsh.mirai.tool.ViVo50.Session.timeout"
     }
 
     override val coroutineContext: CoroutineContext =
@@ -221,6 +224,7 @@ public class ViVo50(
         WebSocketListener, AutoCloseable {
         private var websocket0: WebSocket? = null
         private val packet: MutableMap<String, CompletableFuture<JsonObject>> = ConcurrentHashMap()
+        private val timeout: Long = System.getProperty(SESSION_EXCEPT_TIMEOUT, "60000").toLong()
 
         override fun onOpen(websocket: WebSocket) {
             websocket0 = websocket
@@ -370,7 +374,12 @@ public class ViVo50(
 
             sendPacket(type = type, id = uuid, block = block)
 
-            val json = future.get(60, TimeUnit.SECONDS)
+            val json = try {
+                future.get(timeout, TimeUnit.MILLISECONDS)
+            } catch (cause: TimeoutException) {
+                logger.warning("Session(bot=${bot}) $type timeout", cause)
+                return null
+            }
 
             json["message"]?.let {
                 throw IllegalStateException("Session(bot=${bot}) $type error: $it")
