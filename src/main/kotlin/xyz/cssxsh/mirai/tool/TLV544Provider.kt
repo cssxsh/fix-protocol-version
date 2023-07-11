@@ -54,7 +54,7 @@ public class TLV544Provider : EncryptService {
             } else {
                 this::class.java.getResource("$filename.sha256")?.let { sha256 ->
                     val hash = sha256.readText().trim()
-                    val digest = java.security.MessageDigest.getInstance("SHA256")
+                    val digest = java.security.MessageDigest.getInstance("SHA-256")
                     val now = digest.digest(file.readBytes()).toUHexString("").lowercase()
                     if (hash != now) {
                         logger.warning("SHA256 not match $hash with ${file.toPath().toUri()}")
