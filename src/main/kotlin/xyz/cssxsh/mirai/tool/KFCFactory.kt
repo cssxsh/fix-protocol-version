@@ -12,7 +12,7 @@ import java.net.ConnectException
 import java.net.URL
 
 public class KFCFactory(private val config: File) : EncryptService.Factory {
-    public constructor(): this(config = File("KFCFactory.json"))
+    public constructor(): this(config = File( System.getProperty("xyz.cssxsh.mirai.tool.KFCFactory.config-file") ?: "KFCFactory.json"))
     public companion object {
         @JvmStatic
         public fun install() {
