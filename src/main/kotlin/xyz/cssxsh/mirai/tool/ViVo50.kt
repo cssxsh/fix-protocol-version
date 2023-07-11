@@ -372,8 +372,8 @@ public class ViVo50(
 
             val json = future.get(60, TimeUnit.SECONDS)
 
-            json["message"]?.jsonPrimitive?.content?.let {
-                throw IllegalStateException(it)
+            json["message"]?.let {
+                throw IllegalStateException("Session(bot=${bot}) $type error: $it")
             }
 
             val response = json["response"] ?: return null
