@@ -247,7 +247,7 @@ public class ViVo50(
 
             val json = Json.parseToJsonElement(text).jsonObject
             val id = json["packetId"]!!.jsonPrimitive.content
-            packet[id]?.complete(json)
+            packet.remove(id)?.complete(json)
 
             when (json["packetType"]?.jsonPrimitive?.content) {
                 "rpc.service.send" -> {
