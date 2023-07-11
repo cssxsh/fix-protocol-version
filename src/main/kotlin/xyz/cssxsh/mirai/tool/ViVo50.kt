@@ -233,8 +233,7 @@ public class ViVo50(
         }
 
         override fun onError(cause: Throwable) {
-            val state = if (websocket0 == null) "open fail" else "error"
-            throw IllegalStateException("Session(bot=${bot}) $state", cause)
+            throw IllegalStateException("Session(bot=${bot}) error", cause)
         }
 
         override fun onBinaryFrame(payload: ByteArray, finalFragment: Boolean, rsv: Int) {
@@ -321,7 +320,7 @@ public class ViVo50(
 
             when (response.statusCode) {
                 204 -> websocket0 = null
-                404 -> throw NoSuchElementException(toString())
+                404 -> throw NoSuchElementException("Session(bot=${bot}) ${response.responseBody}")
                 else -> throw IllegalStateException("Session(bot=${bot}) ${response.responseBody}")
             }
         }
