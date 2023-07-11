@@ -72,24 +72,32 @@ public class KFCFactory(private val config: File) : EncryptService.Factory {
                         ?: throw NoSuchElementException("没有找到对应 ${impl.ver} 的服务配置，${toPath().toUri()}")
                 }
 
-                try {
-                    URL(server.base).openConnection().connect()
-                } catch (cause: ConnectException) {
-                    throw RuntimeException("请检查 ${server.base} 的可用性", cause)
-                }
-
                 when (val type = server.type.ifEmpty { throw IllegalArgumentException("need server type") }) {
-                    "fuqiuluo/unidbg-fetch-qsign", "fuqiuluo", "unidbg-fetch-qsign" -> UnidbgFetchQsign(
-                        server = server.base,
-                        key = server.key,
-                        coroutineContext = serviceSubScope.coroutineContext
-                    )
-                    "kiliokuara/magic-signer-guide", "kiliokuara", "magic-signer-guide", "vivo50" -> ViVo50(
-                        server = server.base,
-                        serverIdentityKey = server.serverIdentityKey,
-                        authorizationKey = server.authorizationKey,
-                        coroutineContext = serviceSubScope.coroutineContext
-                    )
+                    "fuqiuluo/unidbg-fetch-qsign", "fuqiuluo", "unidbg-fetch-qsign" -> {
+                        try {
+                            URL(server.base).openConnection().connect()
+                        } catch (cause: ConnectException) {
+                            throw RuntimeException("请检查 unidbg-fetch-qsign by ${server.base} 的可用性", cause)
+                        }
+                        UnidbgFetchQsign(
+                            server = server.base,
+                            key = server.key,
+                            coroutineContext = serviceSubScope.coroutineContext
+                        )
+                    }
+                    "kiliokuara/magic-signer-guide", "kiliokuara", "magic-signer-guide", "vivo50" -> {
+                        try {
+                            URL(server.base).openConnection().connect()
+                        } catch (cause: ConnectException) {
+                            throw RuntimeException("请检查 magic-signer-guide by ${server.base} 的可用性", cause)
+                        }
+                        ViVo50(
+                            server = server.base,
+                            serverIdentityKey = server.serverIdentityKey,
+                            authorizationKey = server.authorizationKey,
+                            coroutineContext = serviceSubScope.coroutineContext
+                        )
+                    }
                     "TLV544Provider" -> TLV544Provider()
                     else -> throw UnsupportedOperationException(type)
                 }
