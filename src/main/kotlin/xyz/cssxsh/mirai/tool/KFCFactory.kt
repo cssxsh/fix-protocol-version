@@ -15,8 +15,6 @@ public class KFCFactory(private val config: File) : EncryptService.Factory {
     public constructor(): this(config = File(System.getProperty(CONFIG_PATH_PROPERTY, "KFCFactory.json")))
     public companion object {
         @JvmStatic
-        public val CONFIG_PATH_PROPERTY: String = "xyz.cssxsh.mirai.tool.KFCFactory.config"
-        @JvmStatic
         public fun install() {
             Services.register(
                 EncryptService.Factory::class.qualifiedName!!,
@@ -24,6 +22,9 @@ public class KFCFactory(private val config: File) : EncryptService.Factory {
                 ::KFCFactory
             )
         }
+
+        @JvmStatic
+        public val CONFIG_PATH_PROPERTY: String = "xyz.cssxsh.mirai.tool.KFCFactory.config"
 
         @JvmStatic
         public val DEFAULT_CONFIG: String = """
@@ -55,7 +56,6 @@ public class KFCFactory(private val config: File) : EncryptService.Factory {
         }
     }
 
-    @Suppress("INVISIBLE_MEMBER")
     override fun createForBot(context: EncryptServiceContext, serviceSubScope: CoroutineScope): EncryptService {
         try {
             org.asynchttpclient.Dsl.config()
@@ -64,12 +64,13 @@ public class KFCFactory(private val config: File) : EncryptService.Factory {
         }
         return when (val protocol = context.extraArgs[EncryptServiceContext.KEY_BOT_PROTOCOL]) {
             BotConfiguration.MiraiProtocol.ANDROID_PHONE, BotConfiguration.MiraiProtocol.ANDROID_PAD -> {
+                @Suppress("INVISIBLE_MEMBER")
+                val version = MiraiProtocolInternal[protocol].ver
                 val server = with(config) {
                     val serializer = MapSerializer(String.serializer(), ServerConfig.serializer())
                     val servers = Json.decodeFromString(serializer, readText())
-                    val impl = MiraiProtocolInternal[protocol]
-                    servers[impl.ver]
-                        ?: throw NoSuchElementException("没有找到对应 ${impl.ver} 的服务配置，${toPath().toUri()}")
+                    servers[version]
+                        ?: throw NoSuchElementException("没有找到对应 $version 的服务配置，${toPath().toUri()}")
                 }
 
                 when (val type = server.type.ifEmpty { throw IllegalArgumentException("need server type") }) {
