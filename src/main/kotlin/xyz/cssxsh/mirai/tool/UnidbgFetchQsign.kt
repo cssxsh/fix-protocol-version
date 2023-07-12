@@ -73,16 +73,6 @@ public class UnidbgFetchQsign(private val server: String, private val key: Strin
         logger.info("Bot(${uin}) register, ${body.message}")
     }
 
-    private fun requestToken(uin: Long) {
-        val response = client.prepareGet("${server}/request_token")
-            .addQueryParam("uin", uin.toString())
-            .execute().get()
-        val body = Json.decodeFromString(DataWrapper.serializer(), response.responseBody)
-        check(body.code == 0) { body.message }
-
-        logger.info("Bot(${uin}) request_token, ${body.message}")
-    }
-
     override fun encryptTlv(context: EncryptServiceContext, tlvType: Int, payload: ByteArray): ByteArray? {
         if (tlvType != 0x544) return null
         val command = context.extraArgs[EncryptServiceContext.KEY_COMMAND_STR]
@@ -115,11 +105,7 @@ public class UnidbgFetchQsign(private val server: String, private val key: Strin
         if (commandName == "StatSvc.register") {
             if (!token.get() && token.compareAndSet(false, true)) {
                 launch(CoroutineName("RequestToken")) {
-                    while (isActive) {
-                        delay((30..40).random() * 60_000L)
-
-                        requestToken(uin = context.id)
-                    }
+                    // requestToken(uin = context.id)
                 }
             }
         }
@@ -128,23 +114,7 @@ public class UnidbgFetchQsign(private val server: String, private val key: Strin
 
         val data = sign(uin = context.id, cmd = commandName, seq = sequenceId, buffer = payload)
 
-        launch(CoroutineName("SendMessage")) {
-            for (callback in data.requestCallback) {
-                logger.verbose("Bot(${context.id}) sendMessage ${callback.cmd} ")
-                val result = channel.sendMessage(
-                    remark = "mobileqq.msf.security",
-                    commandName = callback.cmd,
-                    uin = 0,
-                    data = callback.body.hexToBytes()
-                )
-                if (result == null) {
-                    logger.debug("${callback.cmd} ChannelResult is null")
-                    continue
-                }
-
-                submit(uin = context.id, cmd = result.cmd, callbackId = callback.id, buffer = result.data)
-            }
-        }
+        callback(uin = context.id, request = data.request)
 
         return EncryptService.SignResult(
             sign = data.sign.hexToBytes(),
@@ -168,6 +138,18 @@ public class UnidbgFetchQsign(private val server: String, private val key: Strin
         return Json.decodeFromJsonElement(SignResult.serializer(), body.data)
     }
 
+    private fun requestToken(uin: Long): List<RequestCallback> {
+        val response = client.prepareGet("${server}/request_token")
+            .addQueryParam("uin", uin.toString())
+            .execute().get()
+        val body = Json.decodeFromString(DataWrapper.serializer(), response.responseBody)
+        check(body.code == 0) { body.message }
+
+        logger.info("Bot(${uin}) request_token, ${body.message}")
+
+        return Json.decodeFromJsonElement(ListSerializer(RequestCallback.serializer()), body.data)
+    }
+
     private fun submit(uin: Long, cmd: String, callbackId: Int, buffer: ByteArray) {
         val response = client.prepareGet("${server}/submit")
             .addQueryParam("uin", uin.toString())
@@ -179,6 +161,26 @@ public class UnidbgFetchQsign(private val server: String, private val key: Strin
         check(body.code == 0) { body.message }
 
         logger.debug("Bot(${uin}) submit ${cmd}, ${body.message}")
+    }
+
+    private fun callback(uin: Long, request: List<RequestCallback>) {
+        launch(CoroutineName("SendMessage")) {
+            for (callback in request) {
+                logger.verbose("Bot(${uin}) sendMessage ${callback.cmd} ")
+                val result = channel.sendMessage(
+                    remark = "mobileqq.msf.security",
+                    commandName = callback.cmd,
+                    uin = 0,
+                    data = callback.body.hexToBytes()
+                )
+                if (result == null) {
+                    logger.debug("${callback.cmd} ChannelResult is null")
+                    continue
+                }
+
+                submit(uin = uin, cmd = result.cmd, callbackId = callback.id, buffer = result.data)
+            }
+        }
     }
 
     public companion object {
@@ -211,7 +213,7 @@ private data class SignResult(
     @SerialName("o3did")
     val o3did: String = "",
     @SerialName("requestCallback")
-    val requestCallback: List<RequestCallback> = emptyList()
+    val request: List<RequestCallback> = emptyList()
 )
 
 @Serializable
