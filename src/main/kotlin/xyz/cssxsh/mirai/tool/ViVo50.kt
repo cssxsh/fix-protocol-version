@@ -223,11 +223,13 @@ public class ViVo50(
     private inner class Session(val bot: Long, val token: String, val channel: EncryptService.ChannelProxy) :
         WebSocketListener, AutoCloseable {
         private var websocket0: WebSocket? = null
+        private var cause0: Throwable? = null
         private val packet: MutableMap<String, CompletableFuture<JsonObject>> = ConcurrentHashMap()
         private val timeout: Long = System.getProperty(SESSION_EXCEPT_TIMEOUT, "60000").toLong()
 
         override fun onOpen(websocket: WebSocket) {
             websocket0 = websocket
+            cause0 = null
             logger.info("Session(bot=${bot}) opened")
         }
 
@@ -237,7 +239,23 @@ public class ViVo50(
         }
 
         override fun onError(cause: Throwable) {
-            throw IllegalStateException("Session(bot=${bot}) error", cause)
+            when (val websocket = websocket0) {
+                null -> {
+                    cause0 = cause
+                }
+                else -> {
+                    websocket0 = null
+                    val wrapper = IllegalStateException("Session(bot=${bot}) error", cause)
+                    if (websocket.isOpen) {
+                        try {
+                            websocket.sendCloseFrame()
+                        } catch (cause: Throwable) {
+                            wrapper.addSuppressed(cause)
+                        }
+                    }
+                    logger.error("Session(bot=${bot}) error", wrapper)
+                }
+            }
         }
 
         override fun onBinaryFrame(payload: ByteArray, finalFragment: Boolean, rsv: Int) {
@@ -276,7 +294,7 @@ public class ViVo50(
                     }
                 }
                 "service.interrupt" -> {
-                    logger.error("Bot(${bot}) $text")
+                    logger.error("Session(bot=${bot}) $text")
                 }
                 else -> {
                     // ...
@@ -296,7 +314,7 @@ public class ViVo50(
                         .addWebSocketListener(this)
                         .build()
                 )
-                .get() ?: throw IllegalStateException("Session(bot=${bot}) open fail")
+                .get() ?: throw IllegalStateException("Session(bot=${bot}) open fail", cause0)
         }
 
         private fun check(): WebSocket? {
@@ -338,7 +356,7 @@ public class ViVo50(
                 logger.error(cause)
             }
             try {
-                websocket0?.sendCloseFrame()
+                websocket0?.takeIf { it.isOpen }?.sendCloseFrame()
             } catch (cause: Throwable) {
                 logger.error(cause)
             }
