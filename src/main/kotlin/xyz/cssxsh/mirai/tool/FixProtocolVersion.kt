@@ -255,11 +255,24 @@ public object FixProtocolVersion {
         val json: JsonObject = kotlin.runCatching {
             url.openConnection(proxy)
                 .apply {
-                    connectTimeout = 60_000
-                    readTimeout = 60_000
+                    connectTimeout = 30_000
+                    readTimeout = 30_000
                 }
                 .getInputStream().use { it.readBytes() }
                 .decodeToString()
+        }.recoverCatching { exception ->
+            try {
+                URL("https://ghproxy.com/$url").openConnection()
+                    .apply {
+                        connectTimeout = 30_000
+                        readTimeout = 30_000
+                    }
+                    .getInputStream().use { it.readBytes() }
+                    .decodeToString()
+            } catch (cause: Throwable) {
+                exception.addSuppressed(cause)
+                throw exception
+            }
         }.fold(
             onSuccess = { text ->
                 val online = Json.parseToJsonElement(text).jsonObject
