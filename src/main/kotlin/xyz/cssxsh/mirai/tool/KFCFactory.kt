@@ -14,6 +14,10 @@ import java.net.URL
 public class KFCFactory(private val config: File) : EncryptService.Factory {
     public constructor(): this(config = File(System.getProperty(CONFIG_PATH_PROPERTY, "KFCFactory.json")))
     public companion object {
+
+        @JvmStatic
+        internal val logger: MiraiLogger = MiraiLogger.Factory.create(TLV544Provider::class)
+
         @JvmStatic
         public fun install() {
             Services.register(
@@ -77,9 +81,16 @@ public class KFCFactory(private val config: File) : EncryptService.Factory {
                     "fuqiuluo/unidbg-fetch-qsign", "fuqiuluo", "unidbg-fetch-qsign" -> {
                         try {
                             val about = URL(server.base).readText()
-                            if ("version" !in about) {
-                                // 低于等于 1.1.3 的的版本 requestToken 不工作
-                                System.setProperty(UnidbgFetchQsign.REQUEST_TOKEN_INTERVAL, "0")
+                            logger.info("unidbg-fetch-qsign by ${server.base} about \n" + about)
+                            when {
+                                "version" !in about -> {
+                                    // 低于等于 1.1.3 的的版本 requestToken 不工作
+                                    System.setProperty(UnidbgFetchQsign.REQUEST_TOKEN_INTERVAL, "0")
+                                    logger.warning("请更新 unidbg-fetch-qsign")
+                                }
+                                version !in about -> {
+                                    logger.error("unidbg-fetch-qsign by ${server.base} 的 protocol version 似乎不匹配")
+                                }
                             }
                         } catch (cause: ConnectException) {
                             throw RuntimeException("请检查 unidbg-fetch-qsign by ${server.base} 的可用性", cause)
@@ -92,7 +103,16 @@ public class KFCFactory(private val config: File) : EncryptService.Factory {
                     }
                     "kiliokuara/magic-signer-guide", "kiliokuara", "magic-signer-guide", "vivo50" -> {
                         try {
-                            URL(server.base).openConnection().connect()
+                            val about = URL(server.base).readText()
+                            logger.info("magic-signer-guide by ${server.base} about \n" + about)
+                            when {
+                                "void" == about.trim() -> {
+                                    logger.warning("请更新 magic-signer-guide 的 docker 镜像")
+                                }
+                                version !in about -> {
+                                    logger.error("magic-signer-guide by ${server.base} 的 protocol version 似乎不匹配")
+                                }
+                            }
                         } catch (cause: ConnectException) {
                             throw RuntimeException("请检查 magic-signer-guide by ${server.base} 的可用性", cause)
                         }
