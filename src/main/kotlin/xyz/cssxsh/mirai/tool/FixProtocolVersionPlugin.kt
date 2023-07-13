@@ -7,11 +7,12 @@ import net.mamoe.mirai.console.plugin.jvm.*
 import net.mamoe.mirai.utils.*
 import java.io.File
 
-public object FixProtocolVersionPlugin : KotlinPlugin(
+@PublishedApi
+internal object FixProtocolVersionPlugin : KotlinPlugin(
     JvmPluginDescription(
         id = "xyz.cssxsh.mirai.fix-protocol-version",
         name = "fix-protocol-version",
-        version = "1.9.4"
+        version = "1.9.5"
     ) {
         author("cssxsh")
     }

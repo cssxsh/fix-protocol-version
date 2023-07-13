@@ -9,7 +9,6 @@ import net.mamoe.mirai.utils.*
 import org.asynchttpclient.*
 import kotlin.coroutines.*
 
-@OptIn(MiraiInternalApi::class)
 public class UnidbgFetchQsign(private val server: String, private val key: String, coroutineContext: CoroutineContext) :
     EncryptService, CoroutineScope {
 
@@ -47,14 +46,15 @@ public class UnidbgFetchQsign(private val server: String, private val key: Strin
 
         logger.info("Bot(${context.id}) initialize by $server")
 
+        channel0 = channel
+
+        @OptIn(MiraiInternalApi::class)
         register(
             uin = context.id,
             androidId = device.androidId.decodeToString(),
             guid = device.guid.toUHexString(),
             qimei36 = qimei36
         )
-
-        channel0 = channel
 
         logger.info("Bot(${context.id}) initialize complete")
     }
