@@ -61,13 +61,17 @@ public class ViVo50(
         .apply { initialize(4096) }
         .generateKeyPair()
 
-    private lateinit var session: Session
+    private val sessions = ConcurrentHashMap<Long, Session>()
 
     private var white: List<String> = emptyList()
 
     private fun <T> ListenableFuture<Response>.getBody(deserializer: DeserializationStrategy<T>): T {
         val response = get()
         return Json.decodeFromString(deserializer, response.responseBody)
+    }
+
+    private fun EncryptServiceContext.session(): Session {
+        return sessions[id] ?: throw NoSuchElementException("Session(bot=${id})")
     }
 
     override fun initialize(context: EncryptServiceContext) {
@@ -78,54 +82,61 @@ public class ViVo50(
 
         logger.info("Bot(${context.id}) initialize by $server")
 
-        val token = handshake(uin = context.id)
-        val session = Session(token = token, bot = context.id, channel = channel)
-        session.websocket()
-        coroutineContext.job.invokeOnCompletion { session.close() }
-        this.session = session
-        session.sendCommand(type = "rpc.initialize", deserializer = JsonElement.serializer()) {
-            putJsonObject("extArgs") {
-                put("KEY_QIMEI36", qimei36)
-                putJsonObject("BOT_PROTOCOL") {
-                    putJsonObject("protocolValue") {
-                        @Suppress("INVISIBLE_MEMBER")
-                        put("ver", MiraiProtocolInternal[protocol].ver)
-                    }
-                }
-            }
-            putJsonObject("device") {
-                put("display", device.display.toUHexString(""))
-                put("product", device.product.toUHexString(""))
-                put("device", device.device.toUHexString(""))
-                put("board", device.board.toUHexString(""))
-                put("brand", device.brand.toUHexString(""))
-                put("model", device.model.toUHexString(""))
-                put("bootloader", device.bootloader.toUHexString(""))
-                put("fingerprint", device.fingerprint.toUHexString(""))
-                put("bootId", device.bootId.toUHexString(""))
-                put("procVersion", device.procVersion.toUHexString(""))
-                put("baseBand", device.baseBand.toUHexString(""))
-                putJsonObject("version") {
-                    put("incremental", device.version.incremental.toUHexString(""))
-                    put("release", device.version.release.toUHexString(""))
-                    put("codename", device.version.codename.toUHexString(""))
-                    put("sdk", device.version.sdk)
-                }
-                put("simInfo", device.simInfo.toUHexString(""))
-                put("osType", device.osType.toUHexString(""))
-                put("macAddress", device.macAddress.toUHexString(""))
-                put("wifiBSSID", device.wifiBSSID.toUHexString(""))
-                put("wifiSSID", device.wifiSSID.toUHexString(""))
-                put("imsiMd5", device.imsiMd5.toUHexString(""))
-                put("imei", device.imei)
-                put("apn", device.apn.toUHexString(""))
-                put("androidId", device.androidId.toUHexString(""))
-                @OptIn(MiraiInternalApi::class)
-                put("guid", device.guid.toUHexString(""))
+        if (sessions.containsKey(context.id).not()) {
+            val token = handshake(uin = context.id)
+            val session = Session(token = token, bot = context.id, channel = channel)
+            session.websocket()
+            sessions[context.id] = session
+            coroutineContext.job.invokeOnCompletion {
+                sessions.remove(context.id, session)
+                session.close()
             }
         }
-        session.sendCommand(type = "rpc.get_cmd_white_list", deserializer = ListSerializer(String.serializer())).also {
-            white = checkNotNull(it)
+        with(context.session()) {
+            sendCommand(type = "rpc.initialize", deserializer = JsonElement.serializer()) {
+                putJsonObject("extArgs") {
+                    put("KEY_QIMEI36", qimei36)
+                    putJsonObject("BOT_PROTOCOL") {
+                        putJsonObject("protocolValue") {
+                            @Suppress("INVISIBLE_MEMBER")
+                            put("ver", MiraiProtocolInternal[protocol].ver)
+                        }
+                    }
+                }
+                putJsonObject("device") {
+                    put("display", device.display.toUHexString(""))
+                    put("product", device.product.toUHexString(""))
+                    put("device", device.device.toUHexString(""))
+                    put("board", device.board.toUHexString(""))
+                    put("brand", device.brand.toUHexString(""))
+                    put("model", device.model.toUHexString(""))
+                    put("bootloader", device.bootloader.toUHexString(""))
+                    put("fingerprint", device.fingerprint.toUHexString(""))
+                    put("bootId", device.bootId.toUHexString(""))
+                    put("procVersion", device.procVersion.toUHexString(""))
+                    put("baseBand", device.baseBand.toUHexString(""))
+                    putJsonObject("version") {
+                        put("incremental", device.version.incremental.toUHexString(""))
+                        put("release", device.version.release.toUHexString(""))
+                        put("codename", device.version.codename.toUHexString(""))
+                        put("sdk", device.version.sdk)
+                    }
+                    put("simInfo", device.simInfo.toUHexString(""))
+                    put("osType", device.osType.toUHexString(""))
+                    put("macAddress", device.macAddress.toUHexString(""))
+                    put("wifiBSSID", device.wifiBSSID.toUHexString(""))
+                    put("wifiSSID", device.wifiSSID.toUHexString(""))
+                    put("imsiMd5", device.imsiMd5.toUHexString(""))
+                    put("imei", device.imei)
+                    put("apn", device.apn.toUHexString(""))
+                    put("androidId", device.androidId.toUHexString(""))
+                    @OptIn(MiraiInternalApi::class)
+                    put("guid", device.guid.toUHexString(""))
+                }
+            }
+            sendCommand(type = "rpc.get_cmd_white_list", deserializer = ListSerializer(String.serializer())).also {
+                white = checkNotNull(it)
+            }
         }
 
         logger.info("Bot(${context.id}) initialize complete")
@@ -183,7 +194,7 @@ public class ViVo50(
     override fun encryptTlv(context: EncryptServiceContext, tlvType: Int, payload: ByteArray): ByteArray? {
         val command = context.extraArgs[EncryptServiceContext.KEY_COMMAND_STR]
 
-        val hex = session.sendCommand(type = "rpc.tlv", deserializer = String.serializer()) {
+        val response = context.session().sendCommand(type = "rpc.tlv", deserializer = String.serializer()) {
             put("tlvType", tlvType)
             putJsonObject("extArgs") {
                 put("KEY_COMMAND_STR", command)
@@ -191,7 +202,7 @@ public class ViVo50(
             put("content", payload.toUHexString(""))
         } ?: return null
 
-        return hex.hexToBytes()
+        return response.hexToBytes()
     }
 
     override fun qSecurityGetSign(
@@ -204,7 +215,7 @@ public class ViVo50(
 
         logger.debug("Bot(${context.id}) sign $commandName")
 
-        val response = session.sendCommand(type = "rpc.sign", deserializer = RpcSignResult.serializer()) {
+        val response = context.session().sendCommand(type = "rpc.sign", deserializer = RpcSignResult.serializer()) {
             put("seqId", sequenceId)
             put("command", commandName)
             putJsonObject("extArgs") {
