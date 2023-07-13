@@ -76,7 +76,11 @@ public class KFCFactory(private val config: File) : EncryptService.Factory {
                 when (val type = server.type.ifEmpty { throw IllegalArgumentException("need server type") }) {
                     "fuqiuluo/unidbg-fetch-qsign", "fuqiuluo", "unidbg-fetch-qsign" -> {
                         try {
-                            URL(server.base).openConnection().connect()
+                            val about = URL(server.base).readText()
+                            if ("version" !in about) {
+                                // 低于等于 1.1.3 的的版本 requestToken 不工作
+                                System.setProperty(UnidbgFetchQsign.REQUEST_TOKEN_INTERVAL, "0")
+                            }
                         } catch (cause: ConnectException) {
                             throw RuntimeException("请检查 unidbg-fetch-qsign by ${server.base} 的可用性", cause)
                         }

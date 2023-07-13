@@ -105,7 +105,18 @@ public class UnidbgFetchQsign(private val server: String, private val key: Strin
         if (commandName == "StatSvc.register") {
             if (!token.get() && token.compareAndSet(false, true)) {
                 launch(CoroutineName("RequestToken")) {
-                    // requestToken(uin = context.id)
+                    while (isActive) {
+                        val interval = System.getProperty(REQUEST_TOKEN_INTERVAL, "2400000").toLong()
+                        if (interval == 0L) break
+                        delay(interval)
+                        val request = try {
+                            requestToken(uin = context.id)
+                        } catch (cause: Throwable) {
+                            logger.error(cause)
+                            continue
+                        }
+                        callback(uin = context.id, request = request)
+                    }
                 }
             }
         }
@@ -189,6 +200,9 @@ public class UnidbgFetchQsign(private val server: String, private val key: Strin
 
         @JvmStatic
         internal val logger: MiraiLogger = MiraiLogger.Factory.create(UnidbgFetchQsign::class)
+
+        @JvmStatic
+        public val REQUEST_TOKEN_INTERVAL: String = "xyz.cssxsh.mirai.tool.UnidbgFetchQsign.token.interval"
     }
 }
 

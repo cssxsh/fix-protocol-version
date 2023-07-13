@@ -34,10 +34,11 @@
 
 ## JVM 参数
 
-| property                                       | default         |            desc             | 
-|:-----------------------------------------------|:----------------|:---------------------------:|
-| `xyz.cssxsh.mirai.tool.KFCFactory.config`      | KFCFactory.json | KFCFactory config file path |
-| `xyz.cssxsh.mirai.tool.ViVo50.Session.timeout` | 60000           | Session except timeout (ms) |
+| property                                                | default         |               desc               | 
+|:--------------------------------------------------------|:----------------|:--------------------------------:|
+| `xyz.cssxsh.mirai.tool.KFCFactory.config`               | KFCFactory.json |   KFCFactory config file path    |
+| `xyz.cssxsh.mirai.tool.ViVo50.Session.timeout`          | 60000           |   Session except timeout (ms)    |
+| `xyz.cssxsh.mirai.tool.UnidbgFetchQsign.token.interval` | 2400000         | RequestToken interval, 0 is stop |
 
 以上参数在 `1.9.5` 中加入
 
