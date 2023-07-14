@@ -260,18 +260,9 @@ public object FixProtocolVersion {
             }
             else -> throw IllegalArgumentException("不支持同步的协议: ${protocol.name}")
         }
-        val system = System.getProperty("java.net.useSystemProxies", "false")
-        val proxy = try {
-            System.setProperty("java.net.useSystemProxies", "true")
-            ProxySelector.getDefault()
-                .select(URI("https://www.google.com/"))
-                .firstOrNull() ?: Proxy.NO_PROXY
-        } finally {
-            System.setProperty("java.net.useSystemProxies", system)
-        }
 
         val json: JsonObject = kotlin.runCatching {
-            url.openConnection(proxy)
+            url.openConnection()
                 .apply {
                     connectTimeout = 30_000
                     readTimeout = 30_000
