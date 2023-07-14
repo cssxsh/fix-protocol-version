@@ -241,8 +241,10 @@ public object FixProtocolVersion {
     }
 
     @JvmStatic
-    @JvmOverloads
-    public fun sync(protocol: BotConfiguration.MiraiProtocol, version: String = "latest") {
+    public fun sync(protocol: BotConfiguration.MiraiProtocol): Unit = fetch(protocol = protocol, version = "latest")
+
+    @JvmStatic
+    public fun fetch(protocol: BotConfiguration.MiraiProtocol, version: String) {
         val (file, url) = when (protocol) {
             BotConfiguration.MiraiProtocol.ANDROID_PHONE -> {
                 File("android_phone.json") to
