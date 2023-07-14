@@ -241,19 +241,24 @@ public object FixProtocolVersion {
     }
 
     @JvmStatic
-    public fun sync(protocol: BotConfiguration.MiraiProtocol) {
+    @JvmOverloads
+    public fun sync(protocol: BotConfiguration.MiraiProtocol, version: String = "latest") {
         val (file, url) = when (protocol) {
             BotConfiguration.MiraiProtocol.ANDROID_PHONE -> {
                 File("android_phone.json") to
-                    URL("https://raw.githubusercontent.com/RomiChan/protocol-versions/master/android_phone.json")
+                    when (version) {
+                        "", "latest" -> URL("https://raw.githubusercontent.com/RomiChan/protocol-versions/master/android_phone.json")
+                        else -> URL("https://raw.githubusercontent.com/cssxsh/protocol-versions/add_history/android_phone/${version}.json")
+                    }
             }
             BotConfiguration.MiraiProtocol.ANDROID_PAD -> {
                 File("android_pad.json") to
-                    URL("https://raw.githubusercontent.com/RomiChan/protocol-versions/master/android_pad.json")
+                    when (version) {
+                        "", "latest" -> URL("https://raw.githubusercontent.com/RomiChan/protocol-versions/master/android_pad.json")
+                        else -> URL("https://raw.githubusercontent.com/cssxsh/protocol-versions/add_history/android_pad/${version}.json")
+                    }
             }
-            else -> {
-                throw IllegalArgumentException("不支持同步的协议: ${protocol.name}")
-            }
+            else -> throw IllegalArgumentException("不支持同步的协议: ${protocol.name}")
         }
         val system = System.getProperty("java.net.useSystemProxies", "false")
         val proxy = try {
@@ -273,7 +278,7 @@ public object FixProtocolVersion {
                 }
                 .getInputStream().use { it.readBytes() }
                 .decodeToString()
-        }.recoverCatching { exception ->
+        }.recoverCatching { throwable ->
             try {
                 URL("https://ghproxy.com/$url").openConnection()
                     .apply {
@@ -283,35 +288,19 @@ public object FixProtocolVersion {
                     .getInputStream().use { it.readBytes() }
                     .decodeToString()
             } catch (cause: Throwable) {
+                val exception = throwable.cause as? java.net.UnknownHostException ?: throwable
                 exception.addSuppressed(cause)
                 throw exception
             }
         }.fold(
             onSuccess = { text ->
                 val online = Json.parseToJsonElement(text).jsonObject
-                if (file.isFile) {
-                    val local = Json.parseToJsonElement(file.readText()).jsonObject
-                    if (local.getValue("dump_time").jsonPrimitive.long <
-                        online.getValue("dump_time").jsonPrimitive.long
-                    ) {
-                        file.writeText(text)
-                        file.setLastModified(online.getValue("build_time").jsonPrimitive.long * 1000)
-                        online
-                    } else {
-                        local
-                    }
-                } else {
-                    file.writeText(text)
-                    file.setLastModified(online.getValue("build_time").jsonPrimitive.long * 1000)
-                    online
-                }
+                file.writeText(text)
+                file.setLastModified(online.getValue("build_time").jsonPrimitive.long * 1000)
+                online
             },
             onFailure = { cause ->
-                if (file.isFile) {
-                    Json.parseToJsonElement(file.readText()).jsonObject
-                } else {
-                    throw FileNotFoundException(file.path).initCause(cause)
-                }
+                throw IllegalStateException("从 $url 下载协议失败", cause)
             }
         )
 
@@ -328,6 +317,7 @@ public object FixProtocolVersion {
 
     @JvmStatic
     private fun store(protocol: BotConfiguration.MiraiProtocol, json: JsonObject) {
+        check(json.getValue("app_id").jsonPrimitive.long != 0L) { "载入的 ${protocol.name.lowercase()}.json 有误" }
         protocols.compute(protocol) { _, impl ->
             when {
                 null == impl -> null

@@ -10,9 +10,9 @@ internal object FixProtocolVersionCommand : CompositeCommand(
     description = "FixProtocolVersionCommand"
 ) {
     @SubCommand
-    suspend fun CommandSender.sync(protocol: BotConfiguration.MiraiProtocol) {
+    suspend fun CommandSender.sync(protocol: BotConfiguration.MiraiProtocol, version: String = "latest") {
         try {
-            FixProtocolVersion.sync(protocol)
+            FixProtocolVersion.sync(protocol, version)
             sendMessage(FixProtocolVersion.info()[protocol] ?: "找不到协议信息")
         } catch (cause: Throwable) {
             FixProtocolVersionPlugin.logger.warning(cause)
