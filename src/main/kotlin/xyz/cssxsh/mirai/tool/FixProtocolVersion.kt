@@ -15,6 +15,19 @@ public object FixProtocolVersion {
     private val constructor = clazz.constructors.single()
 
     @PublishedApi
+    internal val protocols: MutableMap<BotConfiguration.MiraiProtocol, MiraiProtocolInternal> by lazy {
+        try {
+            MiraiProtocolInternal.protocols
+        } catch (_: NoSuchMethodError) {
+            with(MiraiProtocolInternal) {
+                this::class.members
+                    .first { "protocols" == it.name }
+                    .call(this)
+            }.cast()
+        }
+    }
+
+    @PublishedApi
     internal fun <T> MiraiProtocolInternal.field(name: String, default: T): T {
         @Suppress("UNCHECKED_CAST")
         return kotlin.runCatching {
@@ -76,7 +89,7 @@ public object FixProtocolVersion {
 
     @JvmStatic
     public fun update() {
-        MiraiProtocolInternal.protocols.compute(BotConfiguration.MiraiProtocol.ANDROID_PHONE) { _, impl ->
+        protocols.compute(BotConfiguration.MiraiProtocol.ANDROID_PHONE) { _, impl ->
             when {
                 null == impl -> null
                 impl.runCatching { id }.isFailure -> impl.change {
@@ -109,7 +122,7 @@ public object FixProtocolVersion {
                 else -> impl
             }
         }
-        MiraiProtocolInternal.protocols.compute(BotConfiguration.MiraiProtocol.ANDROID_PAD) { _, impl ->
+        protocols.compute(BotConfiguration.MiraiProtocol.ANDROID_PAD) { _, impl ->
             when {
                 null == impl -> null
                 impl.runCatching { id }.isFailure -> impl.change {
@@ -142,7 +155,7 @@ public object FixProtocolVersion {
                 else -> impl
             }
         }
-        MiraiProtocolInternal.protocols.compute(BotConfiguration.MiraiProtocol.ANDROID_WATCH) { _, impl ->
+        protocols.compute(BotConfiguration.MiraiProtocol.ANDROID_WATCH) { _, impl ->
             when {
                 null == impl -> null
                 impl.runCatching { id }.isFailure -> impl.change {
@@ -175,7 +188,7 @@ public object FixProtocolVersion {
                 else -> impl
             }
         }
-        MiraiProtocolInternal.protocols.compute(BotConfiguration.MiraiProtocol.IPAD) { _, impl ->
+        protocols.compute(BotConfiguration.MiraiProtocol.IPAD) { _, impl ->
             when {
                 null == impl -> null
                 impl.runCatching { id }.isFailure -> impl.change {
@@ -208,7 +221,7 @@ public object FixProtocolVersion {
                 else -> impl
             }
         }
-        MiraiProtocolInternal.protocols.compute(BotConfiguration.MiraiProtocol.MACOS) { _, impl ->
+        protocols.compute(BotConfiguration.MiraiProtocol.MACOS) { _, impl ->
             when {
                 null == impl -> null
                 impl.runCatching { id }.isFailure -> impl.change {
@@ -315,7 +328,7 @@ public object FixProtocolVersion {
 
     @JvmStatic
     private fun store(protocol: BotConfiguration.MiraiProtocol, json: JsonObject) {
-        MiraiProtocolInternal.protocols.compute(protocol) { _, impl ->
+        protocols.compute(protocol) { _, impl ->
             when {
                 null == impl -> null
                 impl.runCatching { id }.isFailure -> impl.change {
@@ -350,7 +363,7 @@ public object FixProtocolVersion {
 
     @JvmStatic
     public fun info(): Map<BotConfiguration.MiraiProtocol, String> {
-        return MiraiProtocolInternal.protocols.mapValues { (protocol, info) ->
+        return protocols.mapValues { (protocol, info) ->
             val version = info.field("buildVer", null as String?) ?: info.field("ver", "???")
             val epochSecond = info.field("buildTime", 0L)
             val datetime = OffsetDateTime.ofInstant(Instant.ofEpochSecond(epochSecond), ZoneId.systemDefault())
