@@ -89,7 +89,7 @@ public class KFCFactory(private val config: File) : EncryptService.Factory {
                                     logger.warning("请更新 unidbg-fetch-qsign")
                                 }
                                 version !in about -> {
-                                    logger.error("unidbg-fetch-qsign by ${server.base} 与 ${protocol}(${version}) 似乎不匹配")
+                                    throw IllegalStateException("unidbg-fetch-qsign by ${server.base} 与 ${protocol}(${version}) 似乎不匹配")
                                 }
                             }
                         } catch (cause: ConnectException) {
@@ -110,7 +110,7 @@ public class KFCFactory(private val config: File) : EncryptService.Factory {
                                     logger.warning("请更新 magic-signer-guide 的 docker 镜像")
                                 }
                                 version !in about -> {
-                                    logger.error("magic-signer-guide by ${server.base} 与 ${protocol}(${version}) 似乎不匹配")
+                                    throw IllegalStateException("magic-signer-guide by ${server.base} 与 ${protocol}(${version}) 似乎不匹配")
                                 }
                             }
                         } catch (cause: ConnectException) {
