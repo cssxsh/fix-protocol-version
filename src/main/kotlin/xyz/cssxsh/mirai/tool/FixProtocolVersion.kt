@@ -87,6 +87,11 @@ public object FixProtocolVersion {
         var supportsQRLogin: Boolean = impl.field("supportsQRLogin", false)
     }
 
+    /**
+     * fix-protocol-version 插件最初的功能
+     *
+     * 根据本地代码检查协议版本更新
+     */
     @JvmStatic
     public fun update() {
         protocols.compute(BotConfiguration.MiraiProtocol.ANDROID_PHONE) { _, impl ->
@@ -240,9 +245,26 @@ public object FixProtocolVersion {
         }
     }
 
+    /**
+     * 从 [RomiChan/protocol-versions](https://github.com/RomiChan/protocol-versions) 同步最新协议
+     *
+     * @since 1.6.0
+     */
+    @Deprecated(
+        message = "sync 作用不明确，故废弃",
+        ReplaceWith(
+            """fetch(protocol = protocol, version = "latest")""",
+            "xyz.cssxsh.mirai.tool.FixProtocolVersion.fetch"
+        )
+    )
     @JvmStatic
     public fun sync(protocol: BotConfiguration.MiraiProtocol): Unit = fetch(protocol = protocol, version = "latest")
 
+    /**
+     * 从 [RomiChan/protocol-versions](https://github.com/RomiChan/protocol-versions) 获取指定版本协议
+     *
+     * @since 1.9.6
+     */
     @JvmStatic
     public fun fetch(protocol: BotConfiguration.MiraiProtocol, version: String) {
         val (file, url) = when (protocol) {
@@ -250,14 +272,14 @@ public object FixProtocolVersion {
                 File("android_phone.json") to
                     when (version) {
                         "", "latest" -> URL("https://raw.githubusercontent.com/RomiChan/protocol-versions/master/android_phone.json")
-                        else -> URL("https://raw.githubusercontent.com/cssxsh/protocol-versions/add_history/android_phone/${version}.json")
+                        else -> URL("https://raw.githubusercontent.com/RomiChan/protocol-versions/master/android_phone/${version}.json")
                     }
             }
             BotConfiguration.MiraiProtocol.ANDROID_PAD -> {
                 File("android_pad.json") to
                     when (version) {
                         "", "latest" -> URL("https://raw.githubusercontent.com/RomiChan/protocol-versions/master/android_pad.json")
-                        else -> URL("https://raw.githubusercontent.com/cssxsh/protocol-versions/add_history/android_pad/${version}.json")
+                        else -> URL("https://raw.githubusercontent.com/RomiChan/protocol-versions/master/android_pad/${version}.json")
                     }
             }
             else -> throw IllegalArgumentException("不支持同步的协议: ${protocol.name}")
@@ -288,6 +310,7 @@ public object FixProtocolVersion {
         }.fold(
             onSuccess = { text ->
                 val online = Json.parseToJsonElement(text).jsonObject
+                check(online.getValue("app_id").jsonPrimitive.long != 0L) { "载入的 ${protocol.name.lowercase()}.json 有误" }
                 file.writeText(text)
                 file.setLastModified(online.getValue("build_time").jsonPrimitive.long * 1000)
                 online
@@ -300,6 +323,11 @@ public object FixProtocolVersion {
         store(protocol, json)
     }
 
+    /**
+     * 从本地加载协议
+     *
+     * @since 1.8.0
+     */
     @JvmStatic
     public fun load(protocol: BotConfiguration.MiraiProtocol) {
         val file = File("${protocol.name.lowercase()}.json")
@@ -344,6 +372,11 @@ public object FixProtocolVersion {
         }
     }
 
+    /**
+     * 协议版本信息
+     *
+     * @since 1.6.0
+     */
     @JvmStatic
     public fun info(): Map<BotConfiguration.MiraiProtocol, String> {
         return protocols.mapValues { (protocol, info) ->
