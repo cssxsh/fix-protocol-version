@@ -85,11 +85,10 @@ public class ViVo50(
 
         val cmd = java.io.File(cache, "cmd.txt")
 
-        if (sessions.containsKey(context.id).not()) {
+        sessions.computeIfAbsent(context.id) {
             val token = handshake(uin = context.id)
             val session = Session(token = token, bot = context.id, channel = channel)
             session.websocket()
-            sessions[context.id] = session
             coroutineContext.job.invokeOnCompletion {
                 sessions.remove(context.id, session)
                 session.close()
@@ -102,8 +101,8 @@ public class ViVo50(
                 logger.warning("Session(bot=${context.id}) cmd_white_list cache read fail", cause)
                 cmd.delete()
             }
-        }
-        with(context.session()) {
+            session
+        }.apply {
             sendCommand(type = "rpc.initialize", deserializer = JsonElement.serializer()) {
                 putJsonObject("extArgs") {
                     put("KEY_QIMEI36", qimei36)
