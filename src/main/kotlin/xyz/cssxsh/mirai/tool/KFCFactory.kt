@@ -94,6 +94,8 @@ public class KFCFactory(private val config: File) : EncryptService.Factory {
                             }
                         } catch (cause: ConnectException) {
                             throw RuntimeException("请检查 unidbg-fetch-qsign by ${server.base} 的可用性", cause)
+                        } catch (cause: java.io.FileNotFoundException) {
+                            throw RuntimeException("请检查 unidbg-fetch-qsign by ${server.base} 的可用性", cause)
                         }
                         UnidbgFetchQsign(
                             server = server.base,
@@ -115,6 +117,8 @@ public class KFCFactory(private val config: File) : EncryptService.Factory {
                             }
                         } catch (cause: ConnectException) {
                             throw RuntimeException("请检查 magic-signer-guide by ${server.base} 的可用性", cause)
+                        } catch (cause: java.io.FileNotFoundException) {
+                            throw RuntimeException("请检查 unidbg-fetch-qsign by ${server.base} 的可用性", cause)
                         }
                         ViVo50(
                             server = server.base,

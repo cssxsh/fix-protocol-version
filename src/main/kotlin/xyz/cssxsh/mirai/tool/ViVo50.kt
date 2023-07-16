@@ -422,7 +422,7 @@ public class ViVo50(
             val json = try {
                 future.get(timeout, TimeUnit.MILLISECONDS)
             } catch (cause: TimeoutException) {
-                logger.warning("Session(bot=${bot}) $type timeout", cause)
+                logger.warning("Session(bot=${bot}) $type timeout ${timeout}ms", cause)
                 return null
             }
 

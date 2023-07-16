@@ -107,7 +107,8 @@ public class UnidbgFetchQsign(private val server: String, private val key: Strin
                 launch(CoroutineName("RequestToken")) {
                     while (isActive) {
                         val interval = System.getProperty(REQUEST_TOKEN_INTERVAL, "2400000").toLong()
-                        if (interval == 0L) break
+                        if (interval <= 0L) break
+                        if (interval < 600_000) logger.warning("$REQUEST_TOKEN_INTERVAL=${interval} < 600_000 (ms)")
                         delay(interval)
                         val request = try {
                             requestToken(uin = context.id)

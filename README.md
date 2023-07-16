@@ -15,8 +15,21 @@
 
 在 `1.7.0+` 中加入了 TLV544Provider, 但实际效果有限。
 
-在 `1.9.0+` 中加入了 KFCFactory, 以对接第三方服务  
-**请注意第三方服务支持的协议版本是否和 Bot 登录的协议版本匹配**  
+在 `1.9.0+` 中加入了 KFCFactory, 以对接[第三方签名服务](https://mirai.mamoe.net/topic/2373)  
+
+请确保第三方签名服务**可用**！！！  
+请确保第三方签名服务**可用**！！！  
+请确保第三方签名服务**可用**！！！  
+
+## 第三方签名服务
+
+目前支持的第三方签名服务有  
+* [fuqiuluo/unidbg-fetch-qsign](https://github.com/fuqiuluo/unidbg-fetch-qsign)
+* [kiliokuara/magic-signer-guide](https://github.com/kiliokuara/magic-signer-guide)
+
+**请确认第三方签名服务 支持的协议版本 和 登录的协议版本 匹配**
+
+下面是配置文件示例，你可以根据实际情况调整  
 ```json
 {
     "8.9.63": {
@@ -27,8 +40,8 @@
     "8.9.58": {
         "base_url": "http://127.0.0.1:8888",
         "type": "kiliokuara/magic-signer-guide",
-        "serverIdentityKey": "vivo50",
-        "authorizationKey": "kfc"
+        "server_identity_key": "vivo50",
+        "authorization_key": "kfc"
     }
 }
 ```
@@ -61,7 +74,12 @@
 > since 1.8.0
 
 *   `protocol load` 加载本地协议文件  
-    例如 `protocol load ANDROID_PAD`
+    例如 `protocol load ANDROID_PHONE`
+
+> since 1.9.6
+
+*   `protocol fetch <type> <version>` 在线获取协议 
+    例如 `protocol fetch ANDROID_PAD 8.9.63`
 
 ## Mirai Core 使用方法
 
@@ -71,7 +89,7 @@
 在 `1.9.0+` 中加入了 [async-http-client](https://search.maven.org/artifact/org.asynchttpclient/async-http-client/2.12.3/jar) 作为依赖，请自行补全
 
 然后在代码中调用 `FixProtocolVersion` 的静态方法  
-java示例:
+java示例:  
 ```java
 import xyz.cssxsh.mirai.tool.FixProtocolVersion;
 import net.mamoe.mirai.utils.BotConfiguration.MiraiProtocol;
@@ -87,12 +105,17 @@ public class Example {
     public static void sync() {
         FixProtocolVersion.sync(BotConfiguration.MiraiProtocol.ANDROID_PAD);
     }
+    // 获取指定协议版本
+    public static void fetch() {
+        FixProtocolVersion.fetch(BotConfiguration.MiraiProtocol.ANDROID_PAD, "latest");
+        FixProtocolVersion.fetch(BotConfiguration.MiraiProtocol.ANDROID_PAD, "8.9.63");
+    }
     // 加载协议版本
     public static void load() {
         FixProtocolVersion.load(BotConfiguration.MiraiProtocol.ANDROID_PAD);
     }
     // 获取协议版本信息 你可以用这个来检查update是否正常工作
-    public static Map<MiraiProtocol, String> info() {
+    public static Map<BotConfiguration.MiraiProtocol, String> info() {
         return FixProtocolVersion.info();
     }
 }
@@ -100,7 +123,7 @@ public class Example {
 
 ## 相关项目
 
-* https://github.com/RomiChan/protocol-versions 协议选项同步来源
+* https://github.com/RomiChan/protocol-versions 协议信息同步来源
 * https://github.com/LaoLittle/t544_enc 内置 T544 编码器
 * https://github.com/fuqiuluo/unidbg-fetch-qsign
 * https://github.com/kiliokuara/magic-signer-guide Docker 镜像, 解决各种 QQ 机器人框架的 sso sign 和 tlv 加密问题。
