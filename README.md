@@ -29,7 +29,7 @@
 
 **请确认第三方签名服务 支持的协议版本 和 登录的协议版本 匹配**
 
-下面是配置文件示例，你可以根据实际情况调整  
+下面是配置文件 KFCFactory.json 示例，你可以根据实际情况调整  
 ```json
 {
     "8.9.63": {
@@ -97,20 +97,12 @@ import net.mamoe.mirai.utils.BotConfiguration.MiraiProtocol;
 import java.util.Map;
 
 public class Example {
-    // 升级协议版本
-    public static void update() {
-        FixProtocolVersion.update();
-    }
-    // 同步协议版本
-    public static void sync() {
-        FixProtocolVersion.sync(BotConfiguration.MiraiProtocol.ANDROID_PAD);
-    }
     // 获取指定协议版本
     public static void fetch() {
         FixProtocolVersion.fetch(BotConfiguration.MiraiProtocol.ANDROID_PAD, "latest");
         FixProtocolVersion.fetch(BotConfiguration.MiraiProtocol.ANDROID_PAD, "8.9.63");
     }
-    // 加载协议版本
+    // 从本地文件加载协议版本
     public static void load() {
         FixProtocolVersion.load(BotConfiguration.MiraiProtocol.ANDROID_PAD);
     }
