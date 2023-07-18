@@ -16,7 +16,7 @@ public class KFCFactory(private val config: File) : EncryptService.Factory {
     public companion object {
 
         @JvmStatic
-        internal val logger: MiraiLogger = MiraiLogger.Factory.create(TLV544Provider::class)
+        internal val logger: MiraiLogger = MiraiLogger.Factory.create(KFCFactory::class)
 
         @JvmStatic
         public fun install() {
