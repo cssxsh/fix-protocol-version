@@ -74,9 +74,10 @@ public class KFCFactory(private val config: File) : EncryptService.Factory {
                     val serializer = MapSerializer(String.serializer(), ServerConfig.serializer())
                     val servers = Json.decodeFromString(serializer, readText())
                     servers[version]
-                        ?: throw NoSuchElementException("没有找到对应 $version 的服务配置，${toPath().toUri()}")
+                        ?: throw NoSuchElementException("没有找到对应 ${protocol}(${version}) 的服务配置，${toPath().toUri()}")
                 }
 
+                logger.info("${protocol}(${version}) server type: ${server.type}, ${config.toPath().toUri()}")
                 when (val type = server.type.ifEmpty { throw IllegalArgumentException("need server type") }) {
                     "fuqiuluo/unidbg-fetch-qsign", "fuqiuluo", "unidbg-fetch-qsign" -> {
                         try {
