@@ -13,15 +13,23 @@
 
 目前对于 `code=45` 的处理：
 
-在 `1.7.0+` 中加入了 TLV544Provider, 但实际效果有限。
+在 `1.7.0+` 中加入了 [TLV544Provider](src/main/kotlin/xyz/cssxsh/mirai/tool/TLV544Provider.kt), 但实际效果有限
 
-在 `1.9.0+` 中加入了 KFCFactory, 以对接[第三方签名服务](https://mirai.mamoe.net/topic/2373)  
-
-请确保第三方签名服务**可用**！！！  
-请确保第三方签名服务**可用**！！！  
-请确保第三方签名服务**可用**！！！  
+在 `1.9.0+` 中加入了 [KFCFactory](src/main/kotlin/xyz/cssxsh/mirai/tool/KFCFactory.kt), 以对接[第三方签名服务](https://mirai.mamoe.net/topic/2373)
 
 ## 第三方签名服务
+
+> KFCFactory   
+> ↓  
+> 当前的登录协议(ANDROID_PHONE/ANDROID_PAD)   
+> ↓  
+> KFCFactory.json  
+> ↓  
+> fuqiuluo/unidbg-fetch-qsign(UnidbgFetchQsign) 或 kiliokuara/magic-signer-guide(ViVo50)
+
+请确保第三方签名服务**可用**！！！  
+请确保第三方签名服务**可用**！！！  
+请确保第三方签名服务**可用**！！！
 
 目前支持的第三方签名服务有  
 * [fuqiuluo/unidbg-fetch-qsign](https://github.com/fuqiuluo/unidbg-fetch-qsign)
@@ -112,6 +120,12 @@ public class Example {
     }
 }
 ```
+
+> since 1.9.0
+
+关于 [KFCFactory](src/main/kotlin/xyz/cssxsh/mirai/tool/KFCFactory.kt), 正常来说  
+它会根据 [SPI](https://en.wikipedia.org/wiki/Service_provider_interface) 机制被自动加载  
+如果项目结构特殊，也可用使用 `KFCFactory.install()` 手动注册
 
 ## 相关项目
 
