@@ -50,6 +50,9 @@ public class KFCFactory(private val config: File) : EncryptService.Factory {
                 }
             }
         """.trimIndent()
+
+        @JvmStatic
+        internal val created: MutableSet<Long> = java.util.concurrent.ConcurrentHashMap.newKeySet()
     }
 
     init {
@@ -61,6 +64,12 @@ public class KFCFactory(private val config: File) : EncryptService.Factory {
     }
 
     override fun createForBot(context: EncryptServiceContext, serviceSubScope: CoroutineScope): EncryptService {
+        if (created.add(context.id).not()) {
+            throw UnsupportedOperationException("repeated create EncryptService")
+        }
+        serviceSubScope.coroutineContext.job.invokeOnCompletion {
+            created.remove(context.id)
+        }
         try {
             org.asynchttpclient.Dsl.config()
         } catch (cause: NoClassDefFoundError) {
