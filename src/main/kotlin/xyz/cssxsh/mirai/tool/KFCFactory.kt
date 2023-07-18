@@ -132,7 +132,10 @@ public class KFCFactory(private val config: File) : EncryptService.Factory {
                 }
             }
             BotConfiguration.MiraiProtocol.ANDROID_WATCH -> throw UnsupportedOperationException(protocol.name)
-            BotConfiguration.MiraiProtocol.IPAD, BotConfiguration.MiraiProtocol.MACOS -> TLV544Provider()
+            BotConfiguration.MiraiProtocol.IPAD, BotConfiguration.MiraiProtocol.MACOS -> {
+                logger.error("$protocol 尚不支持签名服务，大概率登录失败")
+                TLV544Provider()
+            }
         }
     }
 
