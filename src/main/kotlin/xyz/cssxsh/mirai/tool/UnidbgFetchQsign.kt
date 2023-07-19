@@ -48,13 +48,15 @@ public class UnidbgFetchQsign(private val server: String, private val key: Strin
 
         channel0 = channel
 
-        @OptIn(MiraiInternalApi::class)
-        register(
-            uin = context.id,
-            androidId = device.androidId.decodeToString(),
-            guid = device.guid.toUHexString(),
-            qimei36 = qimei36
-        )
+        if (token.get().not()) {
+            @OptIn(MiraiInternalApi::class)
+            register(
+                uin = context.id,
+                androidId = device.androidId.decodeToString(),
+                guid = device.guid.toUHexString(),
+                qimei36 = qimei36
+            )
+        }
 
         logger.info("Bot(${context.id}) initialize complete")
     }
@@ -105,18 +107,19 @@ public class UnidbgFetchQsign(private val server: String, private val key: Strin
         if (commandName == "StatSvc.register") {
             if (!token.get() && token.compareAndSet(false, true)) {
                 launch(CoroutineName("RequestToken")) {
+                    val uin = context.id
                     while (isActive) {
                         val interval = System.getProperty(REQUEST_TOKEN_INTERVAL, "2400000").toLong()
                         if (interval <= 0L) break
                         if (interval < 600_000) logger.warning("$REQUEST_TOKEN_INTERVAL=${interval} < 600_000 (ms)")
                         delay(interval)
                         val request = try {
-                            requestToken(uin = context.id)
+                            requestToken(uin = uin)
                         } catch (cause: Throwable) {
                             logger.error(cause)
                             continue
                         }
-                        callback(uin = context.id, request = request)
+                        callback(uin = uin, request = request)
                     }
                 }
             }
@@ -131,7 +134,7 @@ public class UnidbgFetchQsign(private val server: String, private val key: Strin
         return EncryptService.SignResult(
             sign = data.sign.hexToBytes(),
             token = data.token.hexToBytes(),
-            extra = data.extra.hexToBytes(),
+            extra = data.extra.hexToBytes()
         )
     }
 
