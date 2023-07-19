@@ -97,23 +97,33 @@
 在 `1.9.0+` 中加入了 [async-http-client](https://search.maven.org/artifact/org.asynchttpclient/async-http-client/2.12.3/jar) 作为依赖，请自行补全
 
 然后在代码中调用 `FixProtocolVersion` 的静态方法  
-java示例:  
+java示例:
+
 ```java
 import xyz.cssxsh.mirai.tool.FixProtocolVersion;
 import net.mamoe.mirai.utils.BotConfiguration.MiraiProtocol;
 
+import java.io.FileNotFoundException;
 import java.util.Map;
 
 public class Example {
     // 获取指定协议版本
     public static void fetch() {
+        // 获取最新版本协议
         FixProtocolVersion.fetch(BotConfiguration.MiraiProtocol.ANDROID_PAD, "latest");
-        FixProtocolVersion.fetch(BotConfiguration.MiraiProtocol.ANDROID_PAD, "8.9.63");
+        // 获取 8.9.63 版本协议
+        FixProtocolVersion.fetch(BotConfiguration.MiraiProtocol.ANDROID_PHONE, "8.9.63");
     }
+
     // 从本地文件加载协议版本
     public static void load() {
-        FixProtocolVersion.load(BotConfiguration.MiraiProtocol.ANDROID_PAD);
+        try {
+            FixProtocolVersion.load(BotConfiguration.MiraiProtocol.ANDROID_PAD);
+        } catch (FileNotFoundException ignored) {
+            FixProtocolVersion.fetch(BotConfiguration.MiraiProtocol.ANDROID_PAD, "8.9.63");
+        }
     }
+
     // 获取协议版本信息 你可以用这个来检查update是否正常工作
     public static Map<BotConfiguration.MiraiProtocol, String> info() {
         return FixProtocolVersion.info();
