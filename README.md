@@ -124,7 +124,7 @@ public class Example {
         }
     }
 
-    // 获取协议版本信息 你可以用这个来检查update是否正常工作
+    // 获取协议版本信息
     public static Map<BotConfiguration.MiraiProtocol, String> info() {
         return FixProtocolVersion.info();
     }
