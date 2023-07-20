@@ -56,6 +56,13 @@ public class UnidbgFetchQsign(private val server: String, private val key: Strin
                 guid = device.guid.toUHexString(),
                 qimei36 = qimei36
             )
+            coroutineContext.job.invokeOnCompletion {
+                try {
+                    destroy(uin = context.id)
+                } catch (cause : Throwable) {
+                    logger.warning("Bot(${context.id}) destroy fail", cause)
+                }
+            }
         }
 
         logger.info("Bot(${context.id}) initialize complete")
@@ -73,6 +80,17 @@ public class UnidbgFetchQsign(private val server: String, private val key: Strin
         check(body.code == 0) { body.message }
 
         logger.info("Bot(${uin}) register, ${body.message}")
+    }
+
+    private fun destroy(uin: Long) {
+        val response = client.prepareGet("${server}/destroy")
+            .addQueryParam("uin", uin.toString())
+            .addQueryParam("key", key)
+            .execute().get()
+        if (response.statusCode == 404) return
+        val body = Json.decodeFromString(DataWrapper.serializer(), response.responseBody)
+
+        logger.info("Bot(${uin}) destroy, ${body.message}")
     }
 
     override fun encryptTlv(context: EncryptServiceContext, tlvType: Int, payload: ByteArray): ByteArray? {
