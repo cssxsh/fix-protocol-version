@@ -28,6 +28,17 @@ public class KFCFactory(private val config: File) : EncryptService.Factory {
         }
 
         @JvmStatic
+        public fun info(): Map<String, String> {
+            val config = File(System.getProperty(CONFIG_PATH_PROPERTY, "KFCFactory.json"))
+            val serializer = MapSerializer(String.serializer(), ServerConfig.serializer())
+            val servers = Json.decodeFromString(serializer, config.readText())
+
+            return servers.mapValues { (version, server) ->
+                "v${version} by ${server.type} from ${server.base}"
+            }
+        }
+
+        @JvmStatic
         public val CONFIG_PATH_PROPERTY: String = "xyz.cssxsh.mirai.tool.KFCFactory.config"
 
         @JvmStatic

@@ -51,12 +51,21 @@ internal object FixProtocolVersionPlugin : KotlinPlugin(
     override fun onEnable() {
         logger.info {
             buildString {
-                appendLine("当前各协议版本日期: ")
+                appendLine("当前各登录协议版本日期: ")
                 for ((_, info) in FixProtocolVersion.info()) {
                     appendLine(info)
                 }
 
                 if ("8.8.88" in this) appendLine().append("Android 8.8.88 协议疑似被拉黑，请谨慎尝试登录")
+            }
+        }
+        logger.info {
+            buildString {
+                appendLine("当前签名服务配置信息: ")
+                for ((version, info) in KFCFactory.info()) {
+                    if (version == "0.0.0" || version == "0.1.0") continue
+                    appendLine(info)
+                }
             }
         }
         FixProtocolVersionCommand.register()
