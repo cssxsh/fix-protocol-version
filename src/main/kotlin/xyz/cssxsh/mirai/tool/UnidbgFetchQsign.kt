@@ -37,7 +37,7 @@ public class UnidbgFetchQsign(private val server: String, private val key: Strin
 
     private val channel: EncryptService.ChannelProxy get() = channel0 ?: throw IllegalStateException("need initialize")
 
-    private val token = java.util.concurrent.atomic.AtomicBoolean(false)
+    private val token = java.util.concurrent.atomic.AtomicLong(0)
 
     override fun initialize(context: EncryptServiceContext) {
         val device = context.extraArgs[EncryptServiceContext.KEY_DEVICE_INFO]
@@ -48,19 +48,22 @@ public class UnidbgFetchQsign(private val server: String, private val key: Strin
 
         channel0 = channel
 
-        if (token.get().not()) {
+        if (token.get() == 0L) {
+            val uin = context.id
             @OptIn(MiraiInternalApi::class)
             register(
-                uin = context.id,
+                uin = uin,
                 androidId = device.androidId.decodeToString(),
                 guid = device.guid.toUHexString(),
                 qimei36 = qimei36
             )
             coroutineContext.job.invokeOnCompletion {
                 try {
-                    destroy(uin = context.id)
+                    destroy(uin = uin)
                 } catch (cause : Throwable) {
-                    logger.warning("Bot(${context.id}) destroy fail", cause)
+                    logger.warning("Bot(${uin}) destroy", cause)
+                } finally {
+                    token.compareAndSet(uin, 0)
                 }
             }
         }
@@ -123,9 +126,9 @@ public class UnidbgFetchQsign(private val server: String, private val key: Strin
         payload: ByteArray
     ): EncryptService.SignResult? {
         if (commandName == "StatSvc.register") {
-            if (!token.get() && token.compareAndSet(false, true)) {
+            if (token.compareAndSet(0, context.id)) {
                 launch(CoroutineName("RequestToken")) {
-                    val uin = context.id
+                    val uin = token.get()
                     while (isActive) {
                         val interval = System.getProperty(REQUEST_TOKEN_INTERVAL, "2400000").toLong()
                         if (interval <= 0L) break
@@ -214,6 +217,10 @@ public class UnidbgFetchQsign(private val server: String, private val key: Strin
                 submit(uin = uin, cmd = result.cmd, callbackId = callback.id, buffer = result.data)
             }
         }
+    }
+
+    override fun toString(): String {
+        return "UnidbgFetchQsign(server=${server}, uin=${token})"
     }
 
     public companion object {

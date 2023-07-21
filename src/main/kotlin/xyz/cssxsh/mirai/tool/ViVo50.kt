@@ -247,6 +247,10 @@ public class ViVo50(
         )
     }
 
+    override fun toString(): String {
+        return "ViVo50(server=${server}, sessions=${sessions.keys})"
+    }
+
     private inner class Session(val bot: Long, val token: String, val channel: EncryptService.ChannelProxy) :
         WebSocketListener, AutoCloseable {
         private var websocket0: WebSocket? = null
