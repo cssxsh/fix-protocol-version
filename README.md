@@ -17,15 +17,19 @@
 
 在 `1.9.0+` 中加入了 [KFCFactory](src/main/kotlin/xyz/cssxsh/mirai/tool/KFCFactory.kt), 以对接[第三方签名服务](https://mirai.mamoe.net/topic/2373)
 
+本插件不内置签名服务，你需要修改配置，指定一个**第三方签名服务**
+
 ## 第三方签名服务
 
-> KFCFactory   
+> KFCFactory  
 > ↓  
-> 当前的登录协议(ANDROID_PHONE/ANDROID_PAD)   
+> ANDROID_PHONE / ANDROID_PAD  
 > ↓  
 > KFCFactory.json  
 > ↓  
-> fuqiuluo/unidbg-fetch-qsign(UnidbgFetchQsign) 或 kiliokuara/magic-signer-guide(ViVo50)
+> UnidbgFetchQsign(fuqiuluo/unidbg-fetch-qsign) / ViVo50(kiliokuara/magic-signer-guide)  
+
+KFCFactory 会根据登录协议版本从配置文件(KFCFactory.json)获取签名服务的配置信息
 
 请确保第三方签名服务**可用**！！！  
 请确保第三方签名服务**可用**！！！  
