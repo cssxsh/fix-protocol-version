@@ -8,6 +8,7 @@ import net.mamoe.mirai.internal.spi.*
 import net.mamoe.mirai.internal.utils.*
 import net.mamoe.mirai.utils.*
 import java.io.File
+import java.io.IOException
 import java.net.ConnectException
 import java.net.URL
 
@@ -92,7 +93,13 @@ public class KFCFactory(private val config: File) : EncryptService.Factory {
                 val version = MiraiProtocolInternal[protocol].ver
                 val server = with(config) {
                     val serializer = MapSerializer(String.serializer(), ServerConfig.serializer())
-                    val servers = Json.decodeFromString(serializer, readText())
+                    val servers = try {
+                        Json.decodeFromString(serializer, readText())
+                    } catch (cause: SerializationException) {
+                        throw RuntimeException("配置文件格式错误，${toPath().toUri()}", cause)
+                    } catch (cause: IOException) {
+                        throw RuntimeException("配置文件读取错误，${toPath().toUri()}", cause)
+                    }
                     servers[version]
                         ?: throw NoSuchElementException("没有找到对应 ${protocol}(${version}) 的服务配置，${toPath().toUri()}")
                 }
