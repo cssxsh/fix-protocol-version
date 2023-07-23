@@ -50,7 +50,7 @@ public class TLV544Provider : EncryptService {
 
         @JvmStatic
         internal fun native() {
-            if (load.compareAndSet(false, true).not()) return
+            if (load.get().not()) return
             val filename = library()
             val file = File(System.getProperty(LIBRARY_PATH_PROPERTY, filename))
             if (file.isFile.not()) {
@@ -72,7 +72,9 @@ public class TLV544Provider : EncryptService {
                 }
             }
             logger.info("load: ${file.toPath().toUri()}")
-            System.load(file.absolutePath)
+            if (load.compareAndSet(false, true)) {
+                System.load(file.absolutePath)
+            }
         }
 
         @JvmStatic
