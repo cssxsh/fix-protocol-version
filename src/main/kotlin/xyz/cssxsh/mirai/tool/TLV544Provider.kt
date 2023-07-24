@@ -73,7 +73,12 @@ public class TLV544Provider : EncryptService {
             }
             logger.info("load: ${file.toPath().toUri()}")
             if (load.compareAndSet(false, true)) {
-                System.load(file.absolutePath)
+                try {
+                    System.load(file.absolutePath)
+                } catch (cause: Throwable) {
+                    load.set(false)
+                    throw cause
+                }
             }
         }
 
