@@ -4,6 +4,7 @@ import net.mamoe.mirai.console.command.CommandManager.INSTANCE.register
 import net.mamoe.mirai.console.command.CommandManager.INSTANCE.unregister
 import net.mamoe.mirai.console.extension.*
 import net.mamoe.mirai.console.plugin.jvm.*
+import net.mamoe.mirai.internal.utils.*
 import net.mamoe.mirai.utils.*
 import java.io.File
 
@@ -65,6 +66,14 @@ internal object FixProtocolVersionPlugin : KotlinPlugin(
                 for ((version, info) in KFCFactory.info()) {
                     if (version == "0.0.0" || version == "0.1.0") continue
                     appendLine(info)
+                }
+
+                @Suppress("INVISIBLE_MEMBER")
+                setOf(
+                    MiraiProtocolInternal[BotConfiguration.MiraiProtocol.ANDROID_PHONE].ver,
+                    MiraiProtocolInternal[BotConfiguration.MiraiProtocol.ANDROID_PAD].ver
+                ).forEach { version ->
+                    if (version !in this) appendLine().append("缺少 v${version} 配置")
                 }
             }
         }
