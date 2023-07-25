@@ -186,7 +186,7 @@ public class UnidbgFetchQsign(private val server: String, private val key: Strin
         return Json.decodeFromJsonElement(ListSerializer(RequestCallback.serializer()), body.data)
     }
 
-    private fun submit(uin: Long, cmd: String, callbackId: Int, buffer: ByteArray) {
+    private fun submit(uin: Long, cmd: String, callbackId: Long, buffer: ByteArray) {
         val response = client.prepareGet("${server}/submit")
             .addQueryParam("uin", uin.toString())
             .addQueryParam("cmd", cmd)
@@ -266,7 +266,7 @@ private data class RequestCallback(
     @SerialName("callback_id")
     @OptIn(ExperimentalSerializationApi::class)
     @JsonNames("callbackId", "callback_id")
-    val id: Int,
+    val id: Long,
     @SerialName("cmd")
     val cmd: String
 )
