@@ -127,8 +127,8 @@ public class UnidbgFetchQsign(private val server: String, private val key: Strin
     ): EncryptService.SignResult? {
         if (commandName == "StatSvc.register") {
             if (token.compareAndSet(0, context.id)) {
+                val uin = context.id
                 launch(CoroutineName("RequestToken")) {
-                    val uin = token.get()
                     while (isActive) {
                         val interval = System.getProperty(REQUEST_TOKEN_INTERVAL, "2400000").toLong()
                         if (interval <= 0L) break
@@ -202,15 +202,19 @@ public class UnidbgFetchQsign(private val server: String, private val key: Strin
     private fun callback(uin: Long, request: List<RequestCallback>) {
         launch(CoroutineName("SendMessage")) {
             for (callback in request) {
-                logger.verbose("Bot(${uin}) sendMessage ${callback.cmd} ")
-                val result = channel.sendMessage(
-                    remark = "mobileqq.msf.security",
-                    commandName = callback.cmd,
-                    uin = 0,
-                    data = callback.body.hexToBytes()
-                )
+                logger.debug("Bot(${uin}) sendMessage ${callback.cmd} ")
+                val result = try {
+                    channel.sendMessage(
+                        remark = "mobileqq.msf.security",
+                        commandName = callback.cmd,
+                        uin = 0,
+                        data = callback.body.hexToBytes()
+                    )
+                } catch (cause: Throwable) {
+                    throw RuntimeException("Bot(${uin}) callback ${callback.cmd}", cause)
+                }
                 if (result == null) {
-                    logger.debug("${callback.cmd} ChannelResult is null")
+                    logger.debug("Bot(${uin}) callback ${callback.cmd} ChannelResult is null")
                     continue
                 }
 
