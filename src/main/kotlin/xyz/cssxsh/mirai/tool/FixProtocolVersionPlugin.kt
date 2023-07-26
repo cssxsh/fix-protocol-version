@@ -13,7 +13,7 @@ internal object FixProtocolVersionPlugin : KotlinPlugin(
     JvmPluginDescription(
         id = "xyz.cssxsh.mirai.fix-protocol-version",
         name = "fix-protocol-version",
-        version = "1.9.9"
+        version = "1.9.10"
     ) {
         author("cssxsh")
     }
@@ -35,11 +35,11 @@ internal object FixProtocolVersionPlugin : KotlinPlugin(
         logger.info("注册服务...")
         try {
             KFCFactory.install()
-            with(File("KFCFactory.json")) {
+            with(File(System.getProperty(KFCFactory.CONFIG_PATH_PROPERTY, "KFCFactory.json"))) {
                 if (exists().not()) {
                     writeText(KFCFactory.DEFAULT_CONFIG)
                 }
-                logger.info("服务配置文件 ${toPath().toUri()}")
+                logger.info("服务配置文件: \n ${toPath().toUri()}")
             }
         } catch (_: NoClassDefFoundError) {
             logger.warning("注册服务失败，请在 2.15.0-dev-105 或更高版本下运行")

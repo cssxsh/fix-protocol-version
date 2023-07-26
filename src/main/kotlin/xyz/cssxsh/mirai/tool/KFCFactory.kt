@@ -57,7 +57,7 @@ public class KFCFactory(private val config: File) : EncryptService.Factory {
                     "authorization_key": "kfc"
                 },
                 "8.8.88": {
-                    "base_url": "http://127.0.0.1:80",
+                    "base_url": "",
                     "type": "TLV544Provider"
                 }
             }
