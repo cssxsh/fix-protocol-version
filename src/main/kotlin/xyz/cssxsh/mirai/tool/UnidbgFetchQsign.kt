@@ -80,7 +80,7 @@ public class UnidbgFetchQsign(private val server: String, private val key: Strin
             .addQueryParam("key", key)
             .execute().get()
         val body = Json.decodeFromString(DataWrapper.serializer(), response.responseBody)
-        check(body.code == 0) { body.message }
+        check(body.code == 0) { "unidbg-fetch-qsign 服务异常, " + body.message }
 
         logger.info("Bot(${uin}) register, ${body.message}")
     }
@@ -112,7 +112,7 @@ public class UnidbgFetchQsign(private val server: String, private val key: Strin
             .addQueryParam("data", data)
             .execute().get()
         val body = Json.decodeFromString(DataWrapper.serializer(), response.responseBody)
-        check(body.code == 0) { body.message }
+        check(body.code == 0) { "unidbg-fetch-qsign 服务异常, " + body.message }
 
         logger.debug("Bot(${uin}) custom_energy ${data}, ${body.message}")
 
@@ -167,7 +167,7 @@ public class UnidbgFetchQsign(private val server: String, private val key: Strin
             .addFormParam("buffer", buffer.toUHexString(""))
             .execute().get()
         val body = Json.decodeFromString(DataWrapper.serializer(), response.responseBody)
-        check(body.code == 0) { body.message }
+        check(body.code == 0) { "unidbg-fetch-qsign 服务异常, " + body.message }
 
         logger.debug("Bot(${uin}) sign ${cmd}, ${body.message}")
 
@@ -179,7 +179,7 @@ public class UnidbgFetchQsign(private val server: String, private val key: Strin
             .addQueryParam("uin", uin.toString())
             .execute().get()
         val body = Json.decodeFromString(DataWrapper.serializer(), response.responseBody)
-        check(body.code == 0) { body.message }
+        check(body.code == 0) { "unidbg-fetch-qsign 服务异常, " + body.message }
 
         logger.info("Bot(${uin}) request_token, ${body.message}")
 
@@ -194,7 +194,7 @@ public class UnidbgFetchQsign(private val server: String, private val key: Strin
             .addQueryParam("buffer", buffer.toUHexString(""))
             .execute().get()
         val body = Json.decodeFromString(DataWrapper.serializer(), response.responseBody)
-        check(body.code == 0) { body.message }
+        check(body.code == 0) { "unidbg-fetch-qsign 服务异常, " + body.message }
 
         logger.debug("Bot(${uin}) submit ${cmd}, ${body.message}")
     }
