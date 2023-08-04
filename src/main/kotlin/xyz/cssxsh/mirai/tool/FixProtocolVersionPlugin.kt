@@ -13,7 +13,7 @@ internal object FixProtocolVersionPlugin : KotlinPlugin(
     JvmPluginDescription(
         id = "xyz.cssxsh.mirai.fix-protocol-version",
         name = "fix-protocol-version",
-        version = "1.9.10"
+        version = "1.9.11"
     ) {
         author("cssxsh")
     }
@@ -50,6 +50,15 @@ internal object FixProtocolVersionPlugin : KotlinPlugin(
     }
 
     override fun onEnable() {
+        logger.info {
+            buildString {
+                appendLine("protocol commands: info, load, fetch")
+                appendLine("example:")
+                appendLine("  protocol info")
+                appendLine("  protocol load ANDROID_PHONE")
+                appendLine("  protocol fetch ANDROID_PAD 8.9.63")
+            }
+        }
         logger.info {
             buildString {
                 appendLine("当前各登录协议版本日期: ")
