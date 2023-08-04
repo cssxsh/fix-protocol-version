@@ -23,6 +23,7 @@ public class TLV544Provider : EncryptService {
         internal val LIBRARY_PATH_PROPERTY: String = "xyz.cssxsh.mirai.tool.t544"
 
         @JvmStatic
+        @PublishedApi
         internal external fun sign(payload: ByteArray): ByteArray
 
         @JvmStatic
@@ -49,8 +50,9 @@ public class TLV544Provider : EncryptService {
         }
 
         @JvmStatic
+        @PublishedApi
         internal fun native() {
-            if (load.get().not()) return
+            if (load.get()) return
             val filename = library()
             val file = File(System.getProperty(LIBRARY_PATH_PROPERTY, filename))
             if (file.isFile.not()) {
