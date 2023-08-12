@@ -13,7 +13,8 @@ import java.net.ConnectException
 import java.net.URL
 
 public class KFCFactory(private val config: File) : EncryptService.Factory {
-    public constructor(): this(config = File(System.getProperty(CONFIG_PATH_PROPERTY, "KFCFactory.json")))
+    public constructor() : this(config = File(System.getProperty(CONFIG_PATH_PROPERTY, "KFCFactory.json")))
+
     public companion object {
 
         @JvmStatic
@@ -31,7 +32,7 @@ public class KFCFactory(private val config: File) : EncryptService.Factory {
         @JvmStatic
         public fun info(): Map<String, String> {
             val config = File(System.getProperty(CONFIG_PATH_PROPERTY, "KFCFactory.json"))
-            val serializer = MapSerializer(String.serializer(), ServerConfig.serializer())
+            val serializer = MapSerializer(String.serializer(), Cola.serializer())
             val servers = Json.decodeFromString(serializer, config.readText())
 
             return servers.mapValues { (version, server) ->
@@ -92,7 +93,7 @@ public class KFCFactory(private val config: File) : EncryptService.Factory {
                 @Suppress("INVISIBLE_MEMBER")
                 val version = MiraiProtocolInternal[protocol].ver
                 val server = with(config) {
-                    val serializer = MapSerializer(String.serializer(), ServerConfig.serializer())
+                    val serializer = MapSerializer(String.serializer(), Cola.serializer())
                     val servers = try {
                         Json.decodeFromString(serializer, readText())
                     } catch (cause: SerializationException) {
@@ -104,7 +105,7 @@ public class KFCFactory(private val config: File) : EncryptService.Factory {
                         ?: throw NoSuchElementException("没有找到对应 ${protocol}(${version}) 的服务配置，${toPath().toUri()}")
                 }
 
-                logger.info("${protocol}(${version}) server type: ${server.type}, ${config.toPath().toUri()}")
+                logger.info("${protocol}(${version}) EncryptService by ${server.type} from ${config.toPath().toUri()}")
                 when (val type = server.type.ifEmpty { throw IllegalArgumentException("need server type") }) {
                     "fuqiuluo/unidbg-fetch-qsign", "fuqiuluo", "unidbg-fetch-qsign" -> {
                         try {
@@ -171,20 +172,3 @@ public class KFCFactory(private val config: File) : EncryptService.Factory {
         return "KFCFactory(config=${config.toPath().toUri()})"
     }
 }
-
-@Serializable
-@OptIn(ExperimentalSerializationApi::class)
-private data class ServerConfig(
-    @SerialName("base_url")
-    val base: String,
-    @SerialName("type")
-    val type: String = "",
-    @SerialName("key")
-    val key: String = "",
-    @SerialName("server_identity_key")
-    @JsonNames("serverIdentityKey")
-    val serverIdentityKey: String = "",
-    @SerialName("authorization_key")
-    @JsonNames("authorizationKey")
-    val authorizationKey: String = ""
-)
