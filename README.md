@@ -58,6 +58,8 @@ KFCFactory 会根据登录协议版本从配置文件(KFCFactory.json)获取签�
 }
 ```
 
+修改配置文件 KFCFactory.json 无需重启 Mirai
+
 ## JVM 参数
 
 | property                                                | default         |               desc               | 
@@ -90,7 +92,7 @@ KFCFactory 会根据登录协议版本从配置文件(KFCFactory.json)获取签�
 
 > since 1.9.6
 
-*   `protocol fetch <type> <version>` 在线获取协议 
+*   `protocol fetch <type> <version>` 在线获取协议  
     例如 `protocol fetch ANDROID_PAD 8.9.63`
 
 ## Mirai Core 使用方法
