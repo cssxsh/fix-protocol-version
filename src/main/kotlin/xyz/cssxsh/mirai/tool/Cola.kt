@@ -5,7 +5,7 @@ import kotlinx.serialization.json.*
 
 @Serializable
 @OptIn(ExperimentalSerializationApi::class)
-public data class Cola(
+internal data class Cola(
     @SerialName("base_url")
     val base: String,
     @SerialName("type")
