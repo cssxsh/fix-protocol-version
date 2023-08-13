@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "xyz.cssxsh.mirai"
-version = "1.9.11"
+version = "1.10.0"
 
 mavenCentralPublish {
     useCentralS01()
@@ -39,6 +39,8 @@ dependencies {
     //
     implementation(platform("org.slf4j:slf4j-parent:2.0.7"))
     testImplementation("org.slf4j:slf4j-simple")
+    //
+    implementation(platform("io.netty:netty-bom:4.1.96.Final"))
 }
 
 kotlin {
