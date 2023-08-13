@@ -4,6 +4,9 @@ import kotlinx.coroutines.*
 import kotlinx.serialization.*
 import kotlinx.serialization.builtins.*
 import kotlinx.serialization.json.*
+import net.mamoe.mirai.*
+import net.mamoe.mirai.event.*
+import net.mamoe.mirai.event.events.*
 import net.mamoe.mirai.internal.spi.*
 import net.mamoe.mirai.utils.*
 import org.asynchttpclient.*
@@ -80,7 +83,7 @@ public class UnidbgFetchQsign(private val server: String, private val key: Strin
             .addQueryParam("key", key)
             .execute().get()
         val body = Json.decodeFromString(DataWrapper.serializer(), response.responseBody)
-        check(body.code == 0) { "unidbg-fetch-qsign 服务异常, " + body.message }
+        body.check(uin = uin)
 
         logger.info("Bot(${uin}) register, ${body.message}")
     }
@@ -94,6 +97,21 @@ public class UnidbgFetchQsign(private val server: String, private val key: Strin
         val body = Json.decodeFromString(DataWrapper.serializer(), response.responseBody)
 
         logger.info("Bot(${uin}) destroy, ${body.message}")
+    }
+
+    private fun DataWrapper.check(uin: Long) {
+        if (code == 0) return
+        token.compareAndSet(uin, 0)
+        val cause = IllegalStateException("unidbg-fetch-qsign 服务异常, 请检查其日志, $message")
+        launch(CoroutineName(name = "Dropped(${uin})")) {
+            if ("Uin is not registered." != message) return@launch
+            @OptIn(MiraiInternalApi::class)
+            BotOfflineEvent.Dropped(
+                bot = Bot.getInstance(qq = uin),
+                cause = cause
+            ).broadcast()
+        }
+        throw cause
     }
 
     override fun encryptTlv(context: EncryptServiceContext, tlvType: Int, payload: ByteArray): ByteArray? {
@@ -112,7 +130,7 @@ public class UnidbgFetchQsign(private val server: String, private val key: Strin
             .addQueryParam("data", data)
             .execute().get()
         val body = Json.decodeFromString(DataWrapper.serializer(), response.responseBody)
-        check(body.code == 0) { "unidbg-fetch-qsign 服务异常, " + body.message }
+        body.check(uin = uin)
 
         logger.debug("Bot(${uin}) custom_energy ${data}, ${body.message}")
 
@@ -128,7 +146,7 @@ public class UnidbgFetchQsign(private val server: String, private val key: Strin
         if (commandName == "StatSvc.register") {
             if (token.compareAndSet(0, context.id)) {
                 val uin = context.id
-                launch(CoroutineName("RequestToken")) {
+                launch(CoroutineName(name = "RequestToken")) {
                     while (isActive) {
                         val interval = System.getProperty(REQUEST_TOKEN_INTERVAL, "2400000").toLong()
                         if (interval <= 0L) break
@@ -167,7 +185,7 @@ public class UnidbgFetchQsign(private val server: String, private val key: Strin
             .addFormParam("buffer", buffer.toUHexString(""))
             .execute().get()
         val body = Json.decodeFromString(DataWrapper.serializer(), response.responseBody)
-        check(body.code == 0) { "unidbg-fetch-qsign 服务异常, " + body.message }
+        body.check(uin = uin)
 
         logger.debug("Bot(${uin}) sign ${cmd}, ${body.message}")
 
@@ -179,7 +197,7 @@ public class UnidbgFetchQsign(private val server: String, private val key: Strin
             .addQueryParam("uin", uin.toString())
             .execute().get()
         val body = Json.decodeFromString(DataWrapper.serializer(), response.responseBody)
-        check(body.code == 0) { "unidbg-fetch-qsign 服务异常, " + body.message }
+        body.check(uin = uin)
 
         logger.info("Bot(${uin}) request_token, ${body.message}")
 
@@ -194,13 +212,13 @@ public class UnidbgFetchQsign(private val server: String, private val key: Strin
             .addQueryParam("buffer", buffer.toUHexString(""))
             .execute().get()
         val body = Json.decodeFromString(DataWrapper.serializer(), response.responseBody)
-        check(body.code == 0) { "unidbg-fetch-qsign 服务异常, " + body.message }
+        body.check(uin = uin)
 
         logger.debug("Bot(${uin}) submit ${cmd}, ${body.message}")
     }
 
     private fun callback(uin: Long, request: List<RequestCallback>) {
-        launch(CoroutineName("SendMessage")) {
+        launch(CoroutineName(name = "SendMessage")) {
             for (callback in request) {
                 logger.debug("Bot(${uin}) sendMessage ${callback.cmd} ")
                 val result = try {

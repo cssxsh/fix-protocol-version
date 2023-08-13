@@ -4,6 +4,9 @@ import kotlinx.coroutines.*
 import kotlinx.serialization.*
 import kotlinx.serialization.builtins.*
 import kotlinx.serialization.json.*
+import net.mamoe.mirai.*
+import net.mamoe.mirai.event.*
+import net.mamoe.mirai.event.events.*
 import net.mamoe.mirai.internal.spi.*
 import net.mamoe.mirai.internal.utils.*
 import net.mamoe.mirai.utils.*
@@ -151,7 +154,7 @@ public class ViVo50(
             }
         }
 
-        launch(CoroutineName("Session(bot=${context.id})")) {
+        launch(CoroutineName(name = "Session(bot=${context.id})")) {
             cmd.writeText(white.joinToString("\n"))
         }
 
@@ -302,7 +305,7 @@ public class ViVo50(
                 "rpc.service.send" -> {
                     val uin = json["botUin"]!!.jsonPrimitive.long
                     val cmd = json["command"]!!.jsonPrimitive.content
-                    launch(CoroutineName("Session(bot=${bot})")) {
+                    launch(CoroutineName(name = "Session(bot=${bot})")) {
                         logger.verbose("Bot(${bot}) sendMessage <- $cmd")
 
                         val result = channel.sendMessage(
@@ -359,7 +362,18 @@ public class ViVo50(
             return when (response.statusCode) {
                 204 -> websocket0
                 404 -> null
-                else -> throw IllegalStateException("Session(bot=${bot}) ${response.responseBody}")
+                else -> {
+                    sessions.remove(bot, this)
+                    val cause = IllegalStateException("Session(bot=${bot}) ${response.responseBody}")
+                    launch(CoroutineName(name = "Dropped(bot=${bot})")) {
+                        @OptIn(MiraiInternalApi::class)
+                        BotOfflineEvent.Dropped(
+                            bot = Bot.getInstance(qq = bot),
+                            cause = cause
+                        ).broadcast()
+                    }
+                    throw cause
+                }
             }
         }
 
