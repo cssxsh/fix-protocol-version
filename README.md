@@ -2,22 +2,13 @@
 
 [![Downloads](https://img.shields.io/github/downloads/cssxsh/fix-protocol-version/total)](https://github.com/cssxsh/fix-protocol-version/releases)
 
-~~此插件仅用于修复 `code=235` 问题~~  
-~~使用前请清理掉 `device.json`, 不然仍有可能触发 `code=235`~~  
-此插件目前可以用于解决 `ANDROID_PHONE`, `ANDROID_PAD`, `IPAD`, `MACOS` 的 `code=235` 问题  
-~~如果遇到 `code=45`，请切换到 `MACOS` 协议~~  
-`MACOS` 协议目前也会触发 `code=45`  
-
-~~再次强调，此插件仅用于修复 `code=235` 问题~~  
-~~他对 `code=45` 并没有明显效果~~
-
 目前对于 `code=45` 的处理：
 
 在 `1.7.0+` 中加入了 [TLV544Provider](src/main/kotlin/xyz/cssxsh/mirai/tool/TLV544Provider.kt), 但实际效果有限
 
 在 `1.9.0+` 中加入了 [KFCFactory](src/main/kotlin/xyz/cssxsh/mirai/tool/KFCFactory.kt), 以对接[第三方签名服务](https://mirai.mamoe.net/topic/2373)
 
-本插件不内置签名服务，你需要修改配置，指定一个**第三方签名服务**
+本插件不内置签名服务，你需要修改配置，根据版本指定**第三方签名服务**
 
 ## 第三方签名服务
 
@@ -35,7 +26,7 @@ KFCFactory 会根据登录协议版本从配置文件(KFCFactory.json)获取签�
 请确保第三方签名服务**可用**！！！  
 请确保第三方签名服务**可用**！！！
 
-目前支持的第三方签名服务有  
+目前支持的第三方签名服务有 (你需要准备至少一个可用的服务)  
 * [fuqiuluo/unidbg-fetch-qsign](https://github.com/fuqiuluo/unidbg-fetch-qsign)
 * [kiliokuara/magic-signer-guide](https://github.com/kiliokuara/magic-signer-guide)
 
