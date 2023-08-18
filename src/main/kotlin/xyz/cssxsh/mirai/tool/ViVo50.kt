@@ -16,8 +16,10 @@ import org.asynchttpclient.ws.*
 import java.security.*
 import java.security.spec.*
 import java.util.*
-import java.util.concurrent.*
+import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
 import javax.crypto.*
 import javax.crypto.spec.*
 import kotlin.coroutines.*
@@ -40,8 +42,8 @@ public class ViVo50(
     override val coroutineContext: CoroutineContext =
         coroutineContext + SupervisorJob(coroutineContext[Job]) + CoroutineExceptionHandler { context, exception ->
             when (exception) {
-                is kotlinx.coroutines.CancellationException -> {
-                    // ...
+                is CancellationException, is InterruptedException -> {
+                    // ignored
                 }
                 else -> {
                     logger.warning({ "with ${context[CoroutineName]}" }, exception)

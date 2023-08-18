@@ -18,8 +18,8 @@ public class UnidbgFetchQsign(private val server: String, private val key: Strin
     override val coroutineContext: CoroutineContext =
         coroutineContext + SupervisorJob(coroutineContext[Job]) + CoroutineExceptionHandler { context, exception ->
             when (exception) {
-                is CancellationException -> {
-                    // ...
+                is CancellationException, is InterruptedException -> {
+                    // ignored
                 }
                 else -> {
                     logger.warning({ "with ${context[CoroutineName]}" }, exception)
