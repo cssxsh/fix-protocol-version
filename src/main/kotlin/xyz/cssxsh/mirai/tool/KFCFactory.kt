@@ -126,6 +126,9 @@ public class KFCFactory(private val config: File) : EncryptService.Factory {
                         } catch (cause: java.io.FileNotFoundException) {
                             throw RuntimeException("请检查 unidbg-fetch-qsign by ${server.base} 的可用性", cause)
                         }
+                        if (server.key.isEmpty()) {
+                            logger.warning("unidbg-fetch-qsign key is empty")
+                        }
                         UnidbgFetchQsign(
                             server = server.base,
                             key = server.key,
@@ -148,6 +151,12 @@ public class KFCFactory(private val config: File) : EncryptService.Factory {
                             throw RuntimeException("请检查 magic-signer-guide by ${server.base} 的可用性", cause)
                         } catch (cause: java.io.FileNotFoundException) {
                             throw RuntimeException("请检查 unidbg-fetch-qsign by ${server.base} 的可用性", cause)
+                        }
+                        if (server.serverIdentityKey.isEmpty()) {
+                            logger.warning("kiliokuara/magic-signer-guide server_identity_key is empty")
+                        }
+                        if (server.authorizationKey.isEmpty()) {
+                            logger.warning("kiliokuara/magic-signer-guide authorization_key is empty")
                         }
                         ViVo50(
                             server = server.base,
