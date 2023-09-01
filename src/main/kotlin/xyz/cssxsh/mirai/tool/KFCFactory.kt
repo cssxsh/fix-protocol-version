@@ -115,10 +115,13 @@ public class KFCFactory(private val config: File) : EncryptService.Factory {
                                 "version" !in about -> {
                                     // 低于等于 1.1.3 的的版本 requestToken 不工作
                                     System.setProperty(UnidbgFetchQsign.REQUEST_TOKEN_INTERVAL, "0")
-                                    logger.warning("请更新 unidbg-fetch-qsign")
+                                    logger.error("请更新 unidbg-fetch-qsign")
                                 }
                                 version !in about -> {
                                     throw IllegalStateException("unidbg-fetch-qsign by ${server.base} 与 ${protocol}(${version}) 似乎不匹配")
+                                }
+                                "IAA" !in about -> {
+                                    logger.error("请确认服务类型为 unidbg-fetch-qsign")
                                 }
                             }
                         } catch (cause: ConnectException) {
@@ -141,10 +144,13 @@ public class KFCFactory(private val config: File) : EncryptService.Factory {
                             logger.info("magic-signer-guide by ${server.base} about \n" + about)
                             when {
                                 "void" == about.trim() -> {
-                                    logger.warning("请更新 magic-signer-guide 的 docker 镜像")
+                                    logger.error("请更新 magic-signer-guide 的 docker 镜像")
                                 }
                                 version !in about -> {
                                     throw IllegalStateException("magic-signer-guide by ${server.base} 与 ${protocol}(${version}) 似乎不匹配")
+                                }
+                                "magic-signer-guide" !in about -> {
+                                    logger.error("请确认服务类型为 magic-signer-guide")
                                 }
                             }
                         } catch (cause: ConnectException) {
@@ -153,10 +159,10 @@ public class KFCFactory(private val config: File) : EncryptService.Factory {
                             throw RuntimeException("请检查 unidbg-fetch-qsign by ${server.base} 的可用性", cause)
                         }
                         if (server.serverIdentityKey.isEmpty()) {
-                            logger.warning("kiliokuara/magic-signer-guide server_identity_key is empty")
+                            logger.warning("magic-signer-guide server_identity_key is empty")
                         }
                         if (server.authorizationKey.isEmpty()) {
-                            logger.warning("kiliokuara/magic-signer-guide authorization_key is empty")
+                            logger.warning("magic-signer-guide authorization_key is empty")
                         }
                         ViVo50(
                             server = server.base,
@@ -171,7 +177,7 @@ public class KFCFactory(private val config: File) : EncryptService.Factory {
             }
             BotConfiguration.MiraiProtocol.ANDROID_WATCH -> throw UnsupportedOperationException(protocol.name)
             BotConfiguration.MiraiProtocol.IPAD, BotConfiguration.MiraiProtocol.MACOS -> {
-                logger.error("$protocol 尚不支持签名服务，大概率登录失败")
+                logger.warning("$protocol 尚不支持签名服务，大概率登录失败")
                 TLV544Provider()
             }
         }
