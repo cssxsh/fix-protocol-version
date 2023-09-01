@@ -10,6 +10,7 @@ import net.mamoe.mirai.event.events.*
 import net.mamoe.mirai.internal.spi.*
 import net.mamoe.mirai.utils.*
 import org.asynchttpclient.*
+import java.time.Duration
 import kotlin.coroutines.*
 
 public class UnidbgFetchQsign(private val server: String, private val key: String, coroutineContext: CoroutineContext) :
@@ -31,9 +32,9 @@ public class UnidbgFetchQsign(private val server: String, private val key: Strin
         DefaultAsyncHttpClientConfig.Builder()
             .setKeepAlive(true)
             .setUserAgent("curl/7.61.0")
-            .setRequestTimeout(90_000)
-            .setConnectTimeout(30_000)
-            .setReadTimeout(180_000)
+            .setRequestTimeout(Duration.ofSeconds(90))
+            .setConnectTimeout(Duration.ofSeconds(30))
+            .setReadTimeout(Duration.ofSeconds(180))
     )
 
     private var channel0: EncryptService.ChannelProxy? = null

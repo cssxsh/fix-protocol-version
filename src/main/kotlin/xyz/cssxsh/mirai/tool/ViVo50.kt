@@ -15,6 +15,7 @@ import org.asynchttpclient.netty.ws.*
 import org.asynchttpclient.ws.*
 import java.security.*
 import java.security.spec.*
+import java.time.Duration
 import java.util.*
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ConcurrentHashMap
@@ -55,9 +56,9 @@ public class ViVo50(
         DefaultAsyncHttpClientConfig.Builder()
             .setKeepAlive(true)
             .setUserAgent("curl/7.61.0")
-            .setRequestTimeout(30_000)
-            .setConnectTimeout(30_000)
-            .setReadTimeout(180_000)
+            .setRequestTimeout(Duration.ofSeconds(30))
+            .setConnectTimeout(Duration.ofSeconds(30))
+            .setReadTimeout(Duration.ofSeconds(180))
     )
 
     private val sharedKey = SecretKeySpec(UUID.randomUUID().toString().substring(0, 16).encodeToByteArray(), "AES")

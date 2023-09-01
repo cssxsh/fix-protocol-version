@@ -91,7 +91,7 @@ KFCFactory 会根据登录协议版本从配置文件(KFCFactory.json)获取签�
 > since 1.1.0
 
 下载 `mirai2.jar`, 然后作为 lib 引用  
-在 `1.9.0+` 中加入了 [async-http-client](https://search.maven.org/artifact/org.asynchttpclient/async-http-client/2.12.3/jar) 作为依赖，请自行补全
+在 `1.9.0+` 中加入了 [async-http-client](https://search.maven.org/artifact/org.asynchttpclient/async-http-client/3.0.0.Beta2/jar) 作为依赖，请自行补全
 
 然后在代码中调用 `FixProtocolVersion` 的静态方法  
 java示例:
