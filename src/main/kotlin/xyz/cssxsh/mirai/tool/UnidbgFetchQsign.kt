@@ -22,6 +22,9 @@ public class UnidbgFetchQsign(private val server: String, private val key: Strin
                 is CancellationException, is InterruptedException -> {
                     // ignored
                 }
+                is KFCStateException -> {
+                    // ignored
+                }
                 else -> {
                     logger.warning({ "with ${context[CoroutineName]}" }, exception)
                 }
@@ -103,7 +106,16 @@ public class UnidbgFetchQsign(private val server: String, private val key: Strin
     private fun DataWrapper.check(uin: Long) {
         if (code == 0) return
         token.compareAndSet(uin, 0)
-        throw KFCStateException("unidbg-fetch-qsign 服务异常, 请检查其日志, '$message'")
+        val cause = KFCStateException("unidbg-fetch-qsign 服务异常, 请检查其日志, '$message'")
+        launch(CoroutineName(name = "Dropped(${uin})")) {
+            if ("Uin is not registered." != message) return@launch
+            @OptIn(MiraiInternalApi::class)
+            BotOfflineEvent.Dropped(
+                bot = Bot.getInstance(qq = uin),
+                cause = cause
+            ).broadcast()
+        }
+        throw cause
     }
 
     override fun encryptTlv(context: EncryptServiceContext, tlvType: Int, payload: ByteArray): ByteArray? {

@@ -46,6 +46,9 @@ public class ViVo50(
                 is CancellationException, is InterruptedException -> {
                     // ignored
                 }
+                is KFCStateException -> {
+                    // ignored
+                }
                 else -> {
                     logger.warning({ "with ${context[CoroutineName]}" }, exception)
                 }
@@ -367,7 +370,15 @@ public class ViVo50(
                 404 -> null
                 else -> {
                     sessions.remove(bot, this)
-                    throw KFCStateException("Session(bot=${bot}) ${response.responseBody}")
+                    val cause = KFCStateException("Session(bot=${bot}) ${response.responseBody}")
+                    launch(CoroutineName(name = "Dropped(bot=${bot})")) {
+                        @OptIn(MiraiInternalApi::class)
+                        BotOfflineEvent.Dropped(
+                            bot = Bot.getInstance(qq = bot),
+                            cause = cause
+                        ).broadcast()
+                    }
+                    throw cause
                 }
             }
         }
