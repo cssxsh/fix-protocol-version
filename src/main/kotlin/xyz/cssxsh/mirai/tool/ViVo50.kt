@@ -367,15 +367,7 @@ public class ViVo50(
                 404 -> null
                 else -> {
                     sessions.remove(bot, this)
-                    val cause = IllegalStateException("Session(bot=${bot}) ${response.responseBody}")
-                    launch(CoroutineName(name = "Dropped(bot=${bot})")) {
-                        @OptIn(MiraiInternalApi::class)
-                        BotOfflineEvent.Dropped(
-                            bot = Bot.getInstance(qq = bot),
-                            cause = cause
-                        ).broadcast()
-                    }
-                    throw cause
+                    throw KFCStateException("Session(bot=${bot}) ${response.responseBody}")
                 }
             }
         }

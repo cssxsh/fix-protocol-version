@@ -103,16 +103,7 @@ public class UnidbgFetchQsign(private val server: String, private val key: Strin
     private fun DataWrapper.check(uin: Long) {
         if (code == 0) return
         token.compareAndSet(uin, 0)
-        val cause = IllegalStateException("unidbg-fetch-qsign 服务异常, 请检查其日志, $message")
-        launch(CoroutineName(name = "Dropped(${uin})")) {
-            if ("Uin is not registered." != message) return@launch
-            @OptIn(MiraiInternalApi::class)
-            BotOfflineEvent.Dropped(
-                bot = Bot.getInstance(qq = uin),
-                cause = cause
-            ).broadcast()
-        }
-        throw cause
+        throw KFCStateException("unidbg-fetch-qsign 服务异常, 请检查其日志, '$message'")
     }
 
     override fun encryptTlv(context: EncryptServiceContext, tlvType: Int, payload: ByteArray): ByteArray? {
