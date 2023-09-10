@@ -1,10 +1,7 @@
 package xyz.cssxsh.mirai.tool
 
-import kotlinx.coroutines.*
-import kotlinx.serialization.json.*
 import net.mamoe.mirai.*
 import net.mamoe.mirai.internal.spi.*
-import net.mamoe.mirai.internal.utils.*
 import net.mamoe.mirai.utils.*
 import java.io.File
 import java.util.*

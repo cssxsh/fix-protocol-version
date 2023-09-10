@@ -11,7 +11,6 @@ import net.mamoe.mirai.internal.spi.*
 import net.mamoe.mirai.internal.utils.*
 import net.mamoe.mirai.utils.*
 import org.asynchttpclient.*
-import org.asynchttpclient.netty.ws.*
 import org.asynchttpclient.ws.*
 import java.security.*
 import java.security.spec.*

@@ -13,7 +13,7 @@ internal object FixProtocolVersionPlugin : KotlinPlugin(
     JvmPluginDescription(
         id = "xyz.cssxsh.mirai.fix-protocol-version",
         name = "fix-protocol-version",
-        version = "1.10.0"
+        version = "1.11.0"
     ) {
         author("cssxsh")
     }
@@ -25,7 +25,7 @@ internal object FixProtocolVersionPlugin : KotlinPlugin(
             for (protocol in BotConfiguration.MiraiProtocol.values()) {
                 val file = File("${protocol.name.lowercase()}.json")
                 if (file.exists()) {
-                    logger.info("$protocol load from ${file.toPath().toUri()}")
+                    logger.info("$protocol load from \n ${file.toPath().toUri()}")
                     FixProtocolVersion.load(protocol)
                 }
             }
