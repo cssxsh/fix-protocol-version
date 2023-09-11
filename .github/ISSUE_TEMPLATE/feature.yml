@@ -1,0 +1,24 @@
+name: Feature 申请
+description: 申请新的 Feature
+labels:
+  - "enhancement"
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢你来到这里
+
+        在反馈前, 请确认你已经做了下面这些事情
+        - 对照过 [Releases](https://github.com/cssxsh/fix-protocol-version/releases)，相关问题未在近期更新中解决
+        - 搜索了已有的 [issues](https://github.com/cssxsh/fix-protocol-version/issues?q=is%3Aissue) 列表中有没相关的信息
+        - 阅读了 [README](https://github.com/cssxsh/fix-protocol-version#readme)
+
+
+  - type: textarea
+    id: feature-description
+    attributes:
+      label: 特性描述
+      description: 在此详细描述你的需求
+    validations:
+      required: true
