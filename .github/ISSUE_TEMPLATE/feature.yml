@@ -22,3 +22,9 @@ body:
       description: 在此详细描述你的需求
     validations:
       required: true
+
+  - type: textarea
+    id: background
+    attributes:
+      label: 应用场景
+      description: 如有必要，你可以在下文补充应用场景

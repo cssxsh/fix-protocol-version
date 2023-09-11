@@ -64,7 +64,7 @@ body:
     attributes:
       label: 签名服务
       description: |
-        如果你正则使用 unidbg-fetch-qsign, 请提供版本号
+        如果你正在使用 unidbg-fetch-qsign, 请提供版本号
       placeholder: |
         magic-signer-guide
     validations:
