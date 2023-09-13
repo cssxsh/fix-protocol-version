@@ -445,8 +445,15 @@ public class ViVo50(
             val json = try {
                 future.get(timeout, TimeUnit.MILLISECONDS)
             } catch (cause: TimeoutException) {
-                logger.warning("Session(bot=${bot}) $type timeout ${timeout}ms", cause)
-                return null
+                when (type) {
+                    "rpc.initialize", "rpc.tlv" -> {
+                        throw IllegalStateException("Session(bot=${bot}) $type timeout ${timeout}ms", cause)
+                    }
+                    else -> {
+                        logger.warning("Session(bot=${bot}) $type timeout ${timeout}ms", cause)
+                        return null
+                    }
+                }
             }
 
             json["message"]?.let {
