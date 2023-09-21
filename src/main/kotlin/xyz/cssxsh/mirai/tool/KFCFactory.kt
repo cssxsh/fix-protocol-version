@@ -78,7 +78,7 @@ public class KFCFactory(private val config: File) : EncryptService.Factory {
 
     override fun createForBot(context: EncryptServiceContext, serviceSubScope: CoroutineScope): EncryptService {
         if (created.add(context.id).not()) {
-            throw UnsupportedOperationException("repeated create EncryptService")
+            throw UnsupportedOperationException("repeated create EncryptService(id=${context.id})")
         }
         serviceSubScope.coroutineContext.job.invokeOnCompletion {
             created.remove(context.id)
@@ -86,7 +86,7 @@ public class KFCFactory(private val config: File) : EncryptService.Factory {
         try {
             org.asynchttpclient.Dsl.config()
         } catch (cause: NoClassDefFoundError) {
-            throw RuntimeException("请参照 https://search.maven.org/artifact/org.asynchttpclient/async-http-client/2.12.3/jar 添加依赖", cause)
+            throw RuntimeException("请参照 https://search.maven.org/artifact/org.asynchttpclient/async-http-client/3.0.0.Beta2/jar 添加依赖", cause)
         }
         return when (val protocol = context.extraArgs[EncryptServiceContext.KEY_BOT_PROTOCOL]) {
             BotConfiguration.MiraiProtocol.ANDROID_PHONE, BotConfiguration.MiraiProtocol.ANDROID_PAD -> {
@@ -105,7 +105,7 @@ public class KFCFactory(private val config: File) : EncryptService.Factory {
                         ?: throw NoSuchElementException("没有找到对应 ${protocol}(${version}) 的服务配置，${toPath().toUri()}")
                 }
 
-                logger.info("${protocol}(${version}) EncryptService by ${server.type} from ${config.toPath().toUri()}")
+                logger.info("create EncryptService(id=${context.id}), protocol=${protocol}(${version}) by ${server.type} from ${config.toPath().toUri()}")
                 when (val type = server.type.ifEmpty { throw IllegalArgumentException("need server type") }) {
                     "fuqiuluo/unidbg-fetch-qsign", "fuqiuluo", "unidbg-fetch-qsign" -> {
                         try {
