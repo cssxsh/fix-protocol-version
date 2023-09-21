@@ -64,9 +64,11 @@ body:
     attributes:
       label: 签名服务
       description: |
-        如果你正在使用 unidbg-fetch-qsign, 请提供版本号
+        如果你正在使用 unidbg-fetch-qsign, 请一并提供版本号
+        如果你正在使用 magic-signer-guide, 请一并提供构建时间
       placeholder: |
-        magic-signer-guide
+        unidbg-fetch-qsign: 1.1.7
+        magic-signer-guide: 2023-08-01 00:00:00
     validations:
       required: true
 
