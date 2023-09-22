@@ -67,7 +67,7 @@ public class UnidbgFetchQsign(private val server: String, private val key: Strin
             coroutineContext.job.invokeOnCompletion {
                 try {
                     destroy(uin = uin)
-                } catch (cause : Throwable) {
+                } catch (cause: Throwable) {
                     logger.warning("Bot(${uin}) destroy", cause)
                 } finally {
                     token.compareAndSet(uin, 0)
@@ -108,7 +108,7 @@ public class UnidbgFetchQsign(private val server: String, private val key: Strin
         token.compareAndSet(uin, 0)
         val cause = KFCStateException("unidbg-fetch-qsign 服务异常, 请检查其日志, '$message'")
         launch(CoroutineName(name = "Dropped(${uin})")) {
-            if ("Uin is not registered." != message) return@launch
+            if (message !in RESET_SESSION) return@launch
             @OptIn(MiraiInternalApi::class)
             BotOfflineEvent.Dropped(
                 bot = Bot.getInstance(qq = uin),
@@ -252,6 +252,12 @@ public class UnidbgFetchQsign(private val server: String, private val key: Strin
     public companion object {
         @JvmStatic
         internal val CMD_WHITE_LIST = UnidbgFetchQsign::class.java.getResource("cmd.txt")!!.readText().lines()
+
+        @JvmStatic
+        internal val RESET_SESSION = arrayOf(
+            "Uin is not registered.",
+            "First use must be submitted with android_id and guid."
+        )
 
         @JvmStatic
         internal val logger: MiraiLogger = MiraiLogger.Factory.create(UnidbgFetchQsign::class)
