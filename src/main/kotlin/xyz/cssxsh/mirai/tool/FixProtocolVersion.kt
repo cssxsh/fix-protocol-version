@@ -328,10 +328,10 @@ public object FixProtocolVersion {
     public val CONFIG_PATH_PROPERTY: String = "xyz.cssxsh.mirai.tool.FixProtocolVersion.folder"
     
     /**
-    * 从本地加载协议
-    *
-    * @since 1.8.0
-    */
+     * 从本地加载协议
+     *
+     * @since 1.8.0
+     */
     @JvmStatic
     public fun load(protocol: BotConfiguration.MiraiProtocol) {
         val prefix = System.getProperty(CONFIG_PATH_PROPERTY)
@@ -341,7 +341,18 @@ public object FixProtocolVersion {
             File("${protocol.name.lowercase()}.json")
         }
         val json: JsonObject = Json.parseToJsonElement(file.readText()).jsonObject
-        
+
+        store(protocol, json)
+    }
+
+    /**
+     * 从自定义文件加载协议
+     *
+     * @since 1.8.0
+     */
+    @JvmStatic
+    public fun load(protocol: BotConfiguration.MiraiProtocol, file: File) {
+        val json: JsonObject = Json.parseToJsonElement(file.readText()).jsonObject
         store(protocol, json)
     }
 
