@@ -5,6 +5,7 @@ import net.mamoe.mirai.internal.utils.*
 import net.mamoe.mirai.utils.*
 import java.io.*
 import java.net.*
+import java.nio.file.Paths
 import java.time.*
 
 @Suppress("INVISIBLE_MEMBER", "INVISIBLE_REFERENCE")
