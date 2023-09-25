@@ -13,7 +13,7 @@ internal object FixProtocolVersionPlugin : KotlinPlugin(
     JvmPluginDescription(
         id = "xyz.cssxsh.mirai.fix-protocol-version",
         name = "fix-protocol-version",
-        version = "1.11.1"
+        version = "1.12.0"
     ) {
         author("cssxsh")
     }
