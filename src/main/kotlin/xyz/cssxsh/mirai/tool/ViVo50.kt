@@ -368,7 +368,11 @@ public class ViVo50(
                 204 -> websocket0
                 404 -> null
                 else -> {
-                    sessions.remove(bot, this)
+                    try {
+                        sessions.remove(bot, this)
+                    } catch (_: IllegalStateException) {
+                        // Recursive update
+                    }
                     val cause = KFCStateException("Session(bot=${bot}) ${response.responseBody}")
                     launch(CoroutineName(name = "Dropped(bot=${bot})")) {
                         @OptIn(MiraiInternalApi::class)
