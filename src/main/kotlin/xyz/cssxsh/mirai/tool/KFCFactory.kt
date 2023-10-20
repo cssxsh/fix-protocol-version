@@ -171,6 +171,23 @@ public class KFCFactory(private val config: File) : EncryptService.Factory {
                             coroutineContext = serviceSubScope.coroutineContext
                         )
                     }
+                    "linxinrao/Shamrock", "linxinrao", "Shamrock" -> {
+                        try {
+                            val about = URL(server.base + "/get_msf_info").readText()
+                            logger.info("Shamrock by ${server.base} about \n" + about)
+                            if (version !in about) {
+                                throw IllegalStateException("Shamrock by ${server.base} 与 ${protocol}(${version}) 似乎不匹配")
+                            }
+                        } catch (cause: ConnectException) {
+                            throw RuntimeException("请检查 Shamrock by ${server.base} 的可用性", cause)
+                        } catch (cause: java.io.FileNotFoundException) {
+                            throw RuntimeException("请检查 Shamrock by ${server.base} 的可用性", cause)
+                        }
+                        Shamrock(
+                            server = server.base,
+                            coroutineContext = serviceSubScope.coroutineContext
+                        )
+                    }
                     "TLV544Provider" -> TLV544Provider()
                     else -> throw UnsupportedOperationException(type)
                 }
