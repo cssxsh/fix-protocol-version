@@ -8,7 +8,10 @@
 
 在 `1.9.0+` 中加入了 [KFCFactory](src/main/kotlin/xyz/cssxsh/mirai/tool/KFCFactory.kt), 以对接[第三方签名服务](https://mirai.mamoe.net/topic/2373)
 
-本插件不内置签名服务，你需要修改配置，根据版本指定**第三方签名服务**
+本插件不内置签名服务，你需要修改配置，根据版本指定**第三方签名服务**  
+
+目前已知的签名服务已经全部跑路，本插件项目停止维护  
+请勿在 Issues 和 Discussions 宣泄情绪  
 
 ## 第三方签名服务
 
@@ -64,7 +67,6 @@ KFCFactory 会根据登录协议版本从配置文件(KFCFactory.json)获取签�
 ## Mirai Console 使用方法
 
 下载 `mirai2.jar` 放到 `plugins` ，重启 `Mirai Console` 即可  
-~~出现 `Mirai版本低于预期，将升级协议版本` 就表示工作正常，因为这只是临时性修复，之后的Mirai版本会另外再修复~~  
 出现 `协议版本检查更新...` 就表示插件开始工作
 
 ### 命令
