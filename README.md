@@ -12,7 +12,9 @@
 
 目前已知的签名服务已经全部跑路，本插件项目停止维护  
 本项目不提供任何代替方案，请自行解决  
-请勿在 Issues 和 Discussions 宣泄情绪   
+请勿在 Issues 和 Discussions 宣泄情绪  
+
+在 `1.13.0+` 中正式将 JDK 版本提升至 11
 
 ## 第三方签名服务
 
@@ -62,8 +64,7 @@ KFCFactory 会根据登录协议版本从配置文件(KFCFactory.json)获取签�
 | `xyz.cssxsh.mirai.tool.KFCFactory.config`               | KFCFactory.json |   KFCFactory config file path    |
 | `xyz.cssxsh.mirai.tool.ViVo50.Session.timeout`          | 60000           |   Session except timeout (ms)    |
 | `xyz.cssxsh.mirai.tool.UnidbgFetchQsign.token.interval` | 2400000         | RequestToken interval, 0 is stop |
-
-以上参数在 `1.9.5` 中加入
+| `xyz.cssxsh.mirai.tool.FixProtocolVersion.source`       | RomiChan        |        protocol versions         |
 
 ## Mirai Console 使用方法
 
