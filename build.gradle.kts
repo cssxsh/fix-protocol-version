@@ -35,7 +35,7 @@ dependencies {
     testImplementation("net.mamoe:mirai-core-mock")
     testImplementation("net.mamoe:mirai-logging-slf4j")
     //
-    implementation("org.asynchttpclient:async-http-client:3.0.0.Beta2")
+    implementation("org.asynchttpclient:async-http-client:3.0.0.Beta3")
     //
     implementation(platform("org.slf4j:slf4j-parent:2.0.7"))
     testImplementation("org.slf4j:slf4j-simple")
