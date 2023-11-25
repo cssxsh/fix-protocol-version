@@ -260,6 +260,9 @@ public object FixProtocolVersion {
     @JvmStatic
     public fun sync(protocol: BotConfiguration.MiraiProtocol): Unit = fetch(protocol = protocol, version = "latest")
 
+    @JvmStatic
+    public val FETCH_SOURCE_PROPERTY: String = "xyz.cssxsh.mirai.tool.FixProtocolVersion.source"
+
     /**
      * 从 [RomiChan/protocol-versions](https://github.com/RomiChan/protocol-versions) 获取指定版本协议
      *
@@ -267,19 +270,20 @@ public object FixProtocolVersion {
      */
     @JvmStatic
     public fun fetch(protocol: BotConfiguration.MiraiProtocol, version: String) {
+        val source = System.getProperty(FETCH_SOURCE_PROPERTY, "RomiChan")
         val (file, url) = when (protocol) {
             BotConfiguration.MiraiProtocol.ANDROID_PHONE -> {
                 File("android_phone.json") to
                     when (version) {
-                        "", "latest" -> URL("https://raw.githubusercontent.com/RomiChan/protocol-versions/master/android_phone.json")
-                        else -> URL("https://raw.githubusercontent.com/RomiChan/protocol-versions/master/android_phone/${version}.json")
+                        "", "latest" -> URL("https://raw.githubusercontent.com/${source}/protocol-versions/master/android_phone.json")
+                        else -> URL("https://raw.githubusercontent.com/${source}/protocol-versions/master/android_phone/${version}.json")
                     }
             }
             BotConfiguration.MiraiProtocol.ANDROID_PAD -> {
                 File("android_pad.json") to
                     when (version) {
-                        "", "latest" -> URL("https://raw.githubusercontent.com/RomiChan/protocol-versions/master/android_pad.json")
-                        else -> URL("https://raw.githubusercontent.com/RomiChan/protocol-versions/master/android_pad/${version}.json")
+                        "", "latest" -> URL("https://raw.githubusercontent.com/${source}/protocol-versions/master/android_pad.json")
+                        else -> URL("https://raw.githubusercontent.com/${source}/protocol-versions/master/android_pad/${version}.json")
                     }
             }
             else -> throw IllegalArgumentException("不支持同步的协议: ${protocol.name}")
