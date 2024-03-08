@@ -299,7 +299,7 @@ public object FixProtocolVersion {
                 .decodeToString()
         }.recoverCatching { throwable ->
             try {
-                URL("https://ghproxy.com/$url").openConnection()
+                URL("https://mirror.ghproxy.com/$url").openConnection()
                     .apply {
                         connectTimeout = 30_000
                         readTimeout = 30_000
